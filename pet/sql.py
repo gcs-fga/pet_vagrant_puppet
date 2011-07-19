@@ -94,3 +94,29 @@ DBUpdater().add(2, statements=[
     name TEXT NOT NULL
   )""",
   ])
+
+DBUpdater().add(3, statements=[
+  "DROP TABLE changelog",
+  """
+  CREATE TABLE file (
+    id SERIAL PRIMARY KEY,
+    named_tree_id INT NOT NULL REFERENCES named_tree(id) ON DELETE CASCADE,
+    commit_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    contents TEXT
+  )""",
+  """
+  CREATE TABLE archive (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL
+  )""",
+  """
+  CREATE TABLE suite (
+    id SERIAL PRIMARY KEY,
+    archive_id INT NOT NULL REFERENCES archive(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'ftp',
+    url TEXT
+  )""",
+  ])
