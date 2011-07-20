@@ -1,0 +1,20 @@
+#! /usr/bin/env python
+
+from pet.models import *
+from pet.vcs import vcs_backend
+import pet.update
+
+import sys
+
+session = Session()
+
+for package_name in sys.argv[1:]:
+  packages = session.query(Package).filter_by(name=package_name).all()
+  for p in packages:
+    r = p.repository
+    v = vcs_backend(r)
+    pu = pet.update.PackageUpdater(p, v)
+    print "I: Updating package {0}".format(p.name)
+    pu.run()
+
+session.commit()
