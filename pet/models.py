@@ -78,3 +78,7 @@ class Archive(Base):
 class Suite(Base):
   __tablename__ = 'suite'
   archive = relation('Archive', backref='suites')
+
+class SuitePackage(Base):
+  __tablename__ = 'suite_package'
+  suite = relation('Suite', backref='packages')

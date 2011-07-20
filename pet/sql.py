@@ -140,3 +140,33 @@ DBUpdater().add(5, statements=[
     ADD COLUMN last_changed_by TEXT -- maintainer name in last changelog entry
   """,
   ])
+
+DBUpdater().add(6, statements=[
+  """
+  ALTER TABLE named_tree
+    ADD COLUMN versions debversion ARRAY NOT NULL DEFAULT ARRAY[]::debversion[]
+  """,
+  """
+  ALTER TABLE archive
+    ADD COLUMN web_root TEXT NOT NULL DEFAULT 'http://packages.qa.debian.org/'
+  """,
+  """
+  ALTER TABLE archive
+    ALTER COLUMN web_root DROP DEFAULT
+  """,
+  """
+  ALTER TABLE suite
+    ADD COLUMN components TEXT ARRAY NOT NULL DEFAULT ARRAY['main', 'contrib', 'non-free']
+  """,
+  """
+  CREATE TABLE suite_package (
+    suite_id INT NOT NULL REFERENCES suite(id),
+    source TEXT NOT NULL,
+    version debversion NOT NULL,
+    component TEXT NOT NULL,
+    maintainer TEXT NOT NULL,
+    uploaders TEXT,
+    dsc TEXT NOT NULL, -- link to .dsc, relative to archive url
+    PRIMARY KEY (suite_id, source, version)
+  )""",
+  ])

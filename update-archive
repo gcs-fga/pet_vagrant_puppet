@@ -1,0 +1,18 @@
+#! /usr/bin/env python
+
+from pet.models import *
+from pet.vcs import vcs_backend
+import pet.update
+
+import sys
+
+session = Session()
+
+for archive_name in sys.argv[1:]:
+  archives = session.query(Archive).filter_by(name=archive_name).all()
+  for a in archives:
+    print "I: Updating archive {0}".format(a.name)
+    au = pet.update.ArchiveUpdater(a)
+    au.run()
+
+session.commit()
