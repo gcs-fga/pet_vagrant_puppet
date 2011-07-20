@@ -120,3 +120,23 @@ DBUpdater().add(3, statements=[
     url TEXT
   )""",
   ])
+
+DBUpdater().add(4, statements=[
+  "ALTER TABLE patch ADD PRIMARY KEY (named_tree_id, name)"
+  ])
+
+DBUpdater().add(5, statements=[
+  """
+  ALTER TABLE named_tree
+    ADD COLUMN source TEXT, -- source package name from debian/control
+    ADD COLUMN maintainer TEXT,
+    ADD COLUMN uploaders TEXT ARRAY,
+    ADD COLUMN homepage TEXT,
+    ADD COLUMN source_changelog TEXT, -- source package name from debian/changelog
+    ADD COLUMN version debversion,
+    ADD COLUMN distribution TEXT,
+    ADD COLUMN urgency TEXT,
+    ADD COLUMN last_changed TIMESTAMP(0) WITH TIME ZONE, -- time from last changelog entry
+    ADD COLUMN last_changed_by TEXT -- maintainer name in last changelog entry
+  """,
+  ])

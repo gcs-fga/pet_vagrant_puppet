@@ -1,9 +1,26 @@
 # (C) 2011, Ansgar Burchardt <ansgar@debian.org>
 import pet
 from sqlalchemy import engine_from_config
+import sqlalchemy.dialects.postgresql
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, sessionmaker
 from sqlalchemy.schema import MetaData
+import sqlalchemy.types
+
+class DebVersion(sqlalchemy.types.UserDefinedType):
+  def get_col_spec(self):
+    return "DEBVERSION"
+  def bind_processor(self, dialect):
+    def process(value):
+      return value
+    return process
+  def result_processor(self, dialect, coltype):
+    def process(value):
+      return value
+    return process
+
+# XXX: Shouldn't there be an API for this?
+sqlalchemy.dialects.postgresql.base.ischema_names['debversion'] = DebVersion
 
 engine = pet.engine()
 metadata = MetaData()
@@ -50,6 +67,10 @@ class NamedTree(Base):
 class File(Base):
   __tablename__ = 'file'
   named_tree = relation('NamedTree', backref='files')
+
+class Patch(Base):
+  __tablename__ = 'patch'
+  named_tree = relation('NamedTree', backref='patches')
 
 class Archive(Base):
   __tablename__ = 'archive'

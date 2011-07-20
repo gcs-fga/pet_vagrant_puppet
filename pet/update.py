@@ -1,6 +1,8 @@
 # (C) 2011, Ansgar Burchardt <ansgar@debian.org>
 from pet.models import *
 from pet.vcs import FileNotFound, vcs_backend
+from debian.deb822 import Deb822
+from debian.changelog import Changelog
 
 class NamedTreeUpdater(object):
   def __init__(self, named_tree, package, vcs):
@@ -9,8 +11,15 @@ class NamedTreeUpdater(object):
     self.package = package
     self.vcs = vcs
   def delete_old_files(self):
+    """
+    remove all outdated versions of files for this named tree
+    """
     self.session.query(File).filter((File.named_tree == self.named_tree) & (File.commit_id != self.named_tree.commit_id)).delete()
   def _get(self, filename):
+    """
+    get contents of a file for the current named tree as a string,
+    or None if the file does not exist
+    """
     if self.named_tree.type == 'tag':
       return self.vcs.file(self.package.name, filename, tag=self.named_tree.name)
     elif self.named_tree.type == 'branch':
@@ -18,6 +27,9 @@ class NamedTreeUpdater(object):
     else:
       raise ValueError("unknown NamedTree type '{0}'".format(self.named_tree.type))
   def retrieve_files(self):
+    """
+    retrieve current versions of files for this named tree
+    """
     for fn in ['debian/changelog', 'debian/control', 'debian/patches/series']:
       if not self.named_tree.has_file(fn):
         try:
@@ -26,11 +38,57 @@ class NamedTreeUpdater(object):
           contents = None
         file = File(named_tree=self.named_tree, commit_id=self.named_tree.commit_id, name=fn, contents=contents)
         self.session.add(file)
+  def update_patches(self):
+    """
+    update list of patches for named tree
+    """
+    self.session.query(Patch).filter_by(named_tree=self.named_tree).delete()
+    patches = self.named_tree.file("debian/patches/series").contents
+    if patches:
+      for line in patches.splitlines():
+        fields = line.split()
+        if len(fields):
+          patch = Patch(named_tree=self.named_tree, name=fields[0])
+          self.session.add(patch)
+  def update_control(self):
+    control_contents = self.named_tree.file("debian/control").contents
+    nt = self.named_tree
+    if control_contents:
+      control = Deb822(control_contents)
+      nt.source = control["Source"]
+      nt.maintainer = control["Maintainer"].strip()
+      if "Uploaders" in control:
+        nt.uploaders = [ u.strip() for u in control["Uploaders"].split(",") ]
+      else:
+        nt.uploaders = None
+        if "Homepage" in control:
+          nt.homepage = control["Homepage"].strip()
+        else:
+          nt.homepage = None
+    else:
+      nt.source = nt.maintainer = nt.uploaders = nt.homepage = None
+  def update_changelog(self):
+    changelog_contents = self.named_tree.file("debian/changelog").contents
+    nt = self.named_tree
+    if changelog_contents:
+      changelog = Changelog(changelog_contents, max_blocks=1, strict=False)
+      nt.source_changelog = changelog.package
+      nt.version = str(changelog.version)
+      nt.distribution = changelog.distributions
+      nt.urgency = changelog.urgency
+      nt.last_changed = changelog.date
+      nt.last_changed_by = changelog.author
+    else:
+      nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
   def run(self):
+    print "I: updating {0}, {1} {2}".format(self.package.name, self.named_tree.type, self.named_tree.name)
     self.session.begin_nested()
     try:
       self.delete_old_files()
       self.retrieve_files()
+      self.update_patches()
+      self.update_control()
+      self.update_changelog()
       self.session.commit()
     except:
       self.session.rollback()
@@ -65,7 +123,7 @@ class PackageUpdater(object):
     self._update_named_tree_list('branch', known, existing)
   def update_named_trees(self):
     for nt in self.package.named_trees:
-      ntu = NamedTreeUpdater(nt, package, self.vcs)
+      ntu = NamedTreeUpdater(nt, self.package, self.vcs)
       ntu.run()
   def run(self):
     self.update_tag_list()
