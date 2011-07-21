@@ -1,13 +1,14 @@
 # (C) 2011, Ansgar Burchardt <ansgar@debian.org>
 from pet.models import *
 from pet.vcs import FileNotFound, vcs_backend
+from pet.bts import DebianBugTracker
 from debian import deb822
 from debian.changelog import Changelog
-import debianbts
 import shutil
 import tempfile
 import os.path
 import subprocess
+import sqlalchemy.orm.exc
 
 class NamedTreeUpdater(object):
   def __init__(self, named_tree, package, vcs):
@@ -250,14 +251,33 @@ class BugTrackerUpdater(object):
     self.session = Session.object_session(bug_tracker)
     self.bug_tracker = bug_tracker
   def _delete_unreferenced_bugs(self, sources):
-    print self.session.query(Bug).filter(Bug.bug_tracker=self.bug_tracker)\
-        .join(Bug.bug_sources).filter(~ BugSource.package.in_(sources)).statement
-    pass
+    # TODO: Should use SQL to look for source package names in named_trees.
+    print self.session.query(Bug).join(Bug.bug_sources) \
+        .filter((Bug.bug_tracker==self.bug_tracker) & ~ BugSource.source.in_(sources)) \
+        .statement
+  def _update_bugs(self, bug_reports):
+    for br in bug_reports:
+      try:
+        bug = self.session.query(Bug).filter_by(bug_tracker=self.bug_tracker, bug_number=br.bug_number).one()
+      except sqlalchemy.orm.exc.NoResultFound:
+        bug = Bug(bug_tracker=self.bug_tracker, bug_number=br.bug_number)
+        self.session.add(bug)
+      br.update_bug(bug)
+
   def run(self, named_trees=None):
-    if packages is None:
-      sources = set([ nt.source for nt in self.session.query(NamedTree).distinct(NamedTree.source) ])
+    # TODO: Add binary_source_map
+    bts = DebianBugTracker({}, ignore_unknown_binaries=True)
+    # TODO: Unify code path once _delete_unreferenced_bugs is fixed
+    # to no longer need the list of sources.
+    if named_trees is None:
+      sources = list(set([ nt.source for nt in self.session.query(NamedTree) ]))
       self._delete_unreferenced_bugs(sources)
-      bugs = debianbts.get_bugs('src', sources)
+      bug_reports = bts.search(sources)
+      self._update_bugs(bug_reports)
+    else:
+      sources = list(set([ nt.source for nt in named_trees ]))
+      bug_reports = bts.search(sources)
+      self._update_bugs(bug_reports)
 
 class Updater(object):
   def run(self):

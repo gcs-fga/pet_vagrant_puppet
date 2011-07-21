@@ -232,7 +232,7 @@ DBUpdater().add(7, statements=[
   """,
   """
   COMMENT ON FUNCTION affects (versions debversion[], found debversion[], fixed debversion[])
-    IS 'check if a bug found (fixed) in the given versions affects the package with versions "version"'
+    IS 'check if a bug found (fixed) in the given versions affects the package with versions "versions"'
   """,
   """
   CREATE TABLE bug_source (
@@ -240,4 +240,27 @@ DBUpdater().add(7, statements=[
     source TEXT NOT NULL,
     PRIMARY KEY (bug_id, source)
   )""",
+  ])
+
+DBUpdater().add(8, statements=[
+  """
+  ALTER TABLE bug
+    DROP COLUMN fixed_versions,
+    DROP COLUMN found_versions
+  """,
+  """
+  ALTER TABLE bug_source
+    ADD COLUMN fixed_versions debversion ARRAY NOT NULL DEFAULT ARRAY[]::debversion[],
+    ADD COLUMN found_versions debversion ARRAY NOT NULL DEFAULT ARRAY[]::debversion[]
+  """,
+  ])
+
+DBUpdater().add(9, statements=[
+  "DELETE FROM bug",
+  """
+  ALTER TABLE bug
+    ALTER COLUMN created TYPE TIMESTAMP(0) WITHOUT TIME ZONE,
+    DROP COLUMN last_changed,
+    ADD COLUMN last_modified TIMESTAMP(0) WITHOUT TIME ZONE
+  """,
   ])
