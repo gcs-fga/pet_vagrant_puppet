@@ -82,7 +82,7 @@ class Subversion(VCS):
       cache = dict()
       for name, dirent in entries[0].items():
         if dirent.kind != svn.core.svn_node_dir: continue
-        cache[name] = dirent.created_rev
+        cache[name] = str(dirent.created_rev)
       self._cache[path] = cache
 
     return self._cache[path]

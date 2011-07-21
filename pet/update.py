@@ -47,6 +47,8 @@ class NamedTreeUpdater(object):
     patches = self.named_tree.file("debian/patches/series").contents
     if patches:
       for line in patches.splitlines():
+        if line.startswith("#"):
+          continue
         fields = line.split()
         if len(fields):
           patch = Patch(named_tree=self.named_tree, name=fields[0])
@@ -99,21 +101,30 @@ class NamedTreeUpdater(object):
 
 class PackageUpdater(object):
   def _update_named_tree_list(self, type, known, existing):
-    for nt in known:
-      if nt not in existing:
+    changed = set()
+
+    for name, nt in known.items():
+      commit_id = existing.get(name, None)
+      if commit_id is None:
         self.session.delete(nt)
-    for nt, commit_id in existing.items():
-      if nt not in known:
-        named_tree = NamedTree(type=type, name=nt, commit_id=commit_id, package=self.package)
-        self.session.add(named_tree)
+      else:
+        nt.commit_id = commit_id
+        changed.add(nt)
+
+    for name, commit_id in existing.items():
+      if name not in known:
+        nt = NamedTree(type=type, name=name, commit_id=commit_id, package=self.package)
+        self.session.add(nt)
+        changed.add(nt)
+    return changed
   def update_tag_list(self):
     known = self.package.tags
     existing = self.vcs.tags(self.package.name)
-    self._update_named_tree_list('tag', known, existing)
+    return self._update_named_tree_list('tag', known, existing)
   def update_branch_list(self):
     known = self.package.branches
     existing = self.vcs.branches(self.package.name)
-    self._update_named_tree_list('branch', known, existing)
+    return self._update_named_tree_list('branch', known, existing)
   def update_named_trees(self):
     ntu = NamedTreeUpdater()
     for nt in self.package.named_trees:
