@@ -1,6 +1,7 @@
 # (C) 2011, Ansgar Burchardt <ansgar@debian.org>
-import pysvn
 from os.path import relpath
+import svn.core, svn.client, svn.ra
+import StringIO
 
 class VCSException(Exception):
   pass
@@ -22,13 +23,21 @@ def vcs_backend(repository):
 class VCS(object):
   pass
 
+class _SubversionCallbacks(svn.ra.Callbacks):
+  def __init__(self):
+    self.auth_baton = svn.core.svn_auth_open([
+      svn.client.get_simple_provider(),
+      svn.client.get_username_provider(),
+      ])
+
 @_vcs_backend("svn")
 class Subversion(VCS):
   def __init__(self, repository):
     self.root = repository.root
     self.web_root = repository.web_root
-    self.svn = pysvn.Client()
-    self.svn.exception_style = 1
+    self.callbacks = _SubversionCallbacks()
+    self.ra = svn.ra.svn_ra_open2(self.root, self.callbacks, None)
+    self.rev = svn.ra.svn_ra_get_latest_revnum(self.ra)
     self._cache = dict()
   def link(self, package, filename, directory=False, branch=None, tag=None):
     assert not (branch and tag), "cannot give both branch and tag"
@@ -51,55 +60,49 @@ class Subversion(VCS):
     """
     assert not (branch and tag), "cannot give both branch and tag"
     if branch:
-      url = "{3}/branches/{1}/{0}/{2}".format(package, branch, filename, self.root)
+      path = "branches/{1}/{0}/{2}".format(package, branch, filename)
     elif tag:
-      url = "{3}/tags/{0}/{1}/{2}".format(package, tag, filename, self.root)
+      path = "tags/{0}/{1}/{2}".format(package, tag, filename)
     else:
-      url = "{2}/trunk/{0}/{1}".format(package, filename, self.root)
-    try:
-      return self.svn.cat(url)
-    except pysvn.ClientError as e:
-      if e[1][0][1] == 160013:
-        raise FileNotFound(e[0])
-      else:
-        raise VCSException(e[0])
+      path = "trunk/{0}/{1}".format(package, filename)
+    # TODO: catch exceptions (file not found)
+    stream = StringIO.StringIO()
+    svn.ra.svn_ra_get_file(self.ra, path, self.rev, stream)
+    return stream.getvalue()
   def _list(self, path):
     """
     retrieve list of (name, commit) of subdirectories in path
     """
-    url = self.root + path
-
-    if url not in self._cache:
-      entries = [ e[0] for e in self.svn.list(url, recurse=False, dirent_fields=pysvn.SVN_DIRENT_KIND|pysvn.SVN_DIRENT_CREATED_REV) ]
+    if path not in self._cache:
+      entries = svn.ra.svn_ra_get_dir2(self.ra, path, self.rev, svn.core.SVN_DIRENT_KIND|svn.core.SVN_DIRENT_CREATED_REV)
       cache = dict()
-      for e in entries:
-        if e.kind != pysvn.node_kind.dir or e.repos_path == path: continue
-        name = relpath(e.repos_path, path)
-        cache[name] = e.created_rev.number
-      self._cache[url] = cache
+      for name, dirent in entries[0].items():
+        if dirent.kind != svn.core.svn_node_dir: continue
+        cache[name] = dirent.created_rev
+      self._cache[path] = cache
 
-    return self._cache[url]
+    return self._cache[path]
   @property
   def packages(self):
     """
     returns a list of known packages in the repository.
     """
-    return self._list("/trunk").keys()
+    return self._list("trunk").keys()
   def branches(self, package, if_changed_since=None):
-    root = self._list("/")
+    root = self._list("")
     if if_changed_since and max(root, key=lambda x: x[1]) <= if_changed_since:
       return None
-    trunk = self._list("/trunk")
+    trunk = self._list("trunk")
     branches = { None: trunk[package] }
-    all_branches = self._list("/branches")
+    all_branches = self._list("branches")
     for name, commit in all_branches.items():
-      branch = self._list("/branches/{0}".format(name))
+      branch = self._list("branches/{0}".format(name))
       if package in branch:
         branches[name] = branch[package]
     return branches
   def tags(self, package, if_changed_since=None):
     if if_changed_since:
-      tags = self._list("/tags")
+      tags = self._list("tags")
       if tags[package] == if_changed_since:
         return None
-    return self._list("/tags/{0}".format(package))
+    return self._list("tags/{0}".format(package))
