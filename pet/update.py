@@ -11,11 +11,6 @@ import subprocess
 import sqlalchemy.orm.exc
 
 class NamedTreeUpdater(object):
-  def __init__(self, named_tree, package, vcs):
-    self.session = Session.object_session(named_tree)
-    self.named_tree = named_tree
-    self.package = package
-    self.vcs = vcs
   def delete_old_files(self):
     """
     remove all outdated versions of files for this named tree
@@ -88,39 +83,29 @@ class NamedTreeUpdater(object):
     else:
       nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
       nt.versions = []
-  def run(self):
-    print "I: updating {0}, {1} {2}".format(self.package.name, self.named_tree.type, self.named_tree.name)
-    self.session.begin_nested()
-    try:
-      self.delete_old_files()
-      self.retrieve_files()
-      self.update_patches()
-      self.update_control()
-      self.update_changelog()
-      self.session.commit()
-    except:
-      self.session.rollback()
-      raise
-
-class PackageUpdater(object):
-  def __init__(self, package, vcs):
-    self.session = Session.object_session(package)
+  def run(self, named_tree, package, vcs):
+    self.session = Session.object_session(named_tree)
+    self.named_tree = named_tree
     self.package = package
     self.vcs = vcs
+
+    print "I: updating {0}, {1} {2}".format(self.package.name, self.named_tree.type, self.named_tree.name)
+
+    self.delete_old_files()
+    self.retrieve_files()
+    self.update_patches()
+    self.update_control()
+    self.update_changelog()
+
+class PackageUpdater(object):
   def _update_named_tree_list(self, type, known, existing):
-    self.session.begin_nested()
-    try:
-      for nt in known:
-        if nt not in existing:
-          self.session.delete(nt)
-      for nt, commit_id in existing.items():
-        if nt not in known:
-          named_tree = NamedTree(type=type, name=nt, commit_id=commit_id, package=self.package)
-          self.session.add(named_tree)
-      self.session.commit()
-    except:
-      self.session.rollback()
-      raise
+    for nt in known:
+      if nt not in existing:
+        self.session.delete(nt)
+    for nt, commit_id in existing.items():
+      if nt not in known:
+        named_tree = NamedTree(type=type, name=nt, commit_id=commit_id, package=self.package)
+        self.session.add(named_tree)
   def update_tag_list(self):
     known = self.package.tags
     existing = self.vcs.tags(self.package.name)
@@ -130,10 +115,14 @@ class PackageUpdater(object):
     existing = self.vcs.branches(self.package.name)
     self._update_named_tree_list('branch', known, existing)
   def update_named_trees(self):
+    ntu = NamedTreeUpdater()
     for nt in self.package.named_trees:
-      ntu = NamedTreeUpdater(nt, self.package, self.vcs)
-      ntu.run()
-  def run(self):
+      ntu.run(nt, self.package, self.vcs)
+  def run(self, package, vcs):
+    self.session = Session.object_session(package)
+    self.package = package
+    self.vcs = vcs
+
     self.update_tag_list()
     self.update_branch_list()
     self.update_named_trees()
@@ -164,11 +153,11 @@ class RepositoryUpdater(object):
       raise
   def update_packages(self):
     for p in self.repository.packages:
+      pu = PackageUpdater()
       self.session.begin_nested()
       try:
         print "I: Updating package {0}".format(p.name)
-        pu = PackageUpdater(p, self.vcs)
-        pu.run()
+        pu.run(p, self.vcs)
         self.session.commit()
       # XXX: Do we want to catch all exceptions here? Probably yes.
       except Exception as e:
