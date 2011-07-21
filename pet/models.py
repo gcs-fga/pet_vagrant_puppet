@@ -55,7 +55,7 @@ class Package(Base):
 
 class NamedTree(Base):
   __tablename__ = 'named_tree'
-  package = relation('Package', backref=backref('named_trees', lazy='joined'))
+  package = relation('Package', backref='named_trees')
   def _file(self, filename):
     session = Session.object_session(self)
     return session.query(File).filter_by(named_tree=self, name=filename, commit_id=self.commit_id)

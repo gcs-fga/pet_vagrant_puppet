@@ -101,7 +101,7 @@ class NamedTreeUpdater(object):
 
 class PackageUpdater(object):
   def _update_named_tree_list(self, type, known, existing):
-    changed = set()
+    changed = []
 
     for name, nt in known.items():
       commit_id = existing.get(name, None)
@@ -109,13 +109,14 @@ class PackageUpdater(object):
         self.session.delete(nt)
       else:
         nt.commit_id = commit_id
-        changed.add(nt)
+        changed.append(nt)
 
     for name, commit_id in existing.items():
       if name not in known:
         nt = NamedTree(type=type, name=name, commit_id=commit_id, package=self.package)
         self.session.add(nt)
-        changed.add(nt)
+        changed.append(nt)
+
     return changed
   def update_tag_list(self):
     known = self.package.tags
