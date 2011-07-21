@@ -10,7 +10,7 @@ python-mako
 python-psycopg2
 python-pyramid
 python-sqlalchemy
-python-svn
+python-subversion
 
 
 Install
