@@ -170,3 +170,74 @@ DBUpdater().add(6, statements=[
     PRIMARY KEY (suite_id, source, version)
   )""",
   ])
+
+DBUpdater().add(7, statements=[
+  """
+  CREATE TABLE bug_tracker (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    url TEXT NOT NULL,
+    web_url TEXT NOT NULL
+  )""",
+  "INSERT INTO bug_tracker (name, type, url, web_url) VALUES ('debian', 'debianbts', 'http://bugs.debian.org/cgi-bin/soap.cgi', 'http://bugs.debian.org/')",
+  """
+  CREATE TYPE severity
+    AS ENUM ('wishlist', 'minor', 'normal', 'important', 'serious', 'grave', 'critical')
+  """,
+  """
+  CREATE TABLE bug (
+    id SERIAL PRIMARY KEY,
+    bug_tracker_id INT NOT NULL REFERENCES bug_tracker(id) ON DELETE CASCADE,
+    bug_number INT NOT NULL,
+    done BOOLEAN NOT NULL,
+    severity severity NOT NULL,
+    tags TEXT ARRAY NOT NULL DEFAULT ARRAY[]::TEXT[],
+    subject TEXT NOT NULL,
+    submitter TEXT NOT NULL,
+    created TIMESTAMP(0) WITH TIME ZONE NOT NULL,
+    owner TEXT NOT NULL,
+    last_changed TIMESTAMP(0) WITH TIME ZONE NOT NULL,
+    fixed_versions debversion ARRAY NOT NULL DEFAULT ARRAY[]::debversion[],
+    found_versions debversion ARRAY NOT NULL DEFAULT ARRAY[]::debversion[],
+    forwarded TEXT,
+    blocks INT ARRAY NOT NULL DEFAULT ARRAY[]::INT[],
+    blocked_by INT ARRAY NOT NULL DEFAULT ARRAY[]::INT[]
+  )""",
+  """
+  CREATE OR REPLACE
+    FUNCTION affects (versions debversion[], found debversion[], fixed debversion[])
+    RETURNS BOOLEAN
+    IMMUTABLE
+    STRICT
+    LANGUAGE sql AS $function$
+
+  SELECT
+    (found_ IS NOT NULL AND fixed_ IS NOT NULL AND found_ >= fixed_)
+    OR
+    (fixed_ IS NULL AND (found_is_empty OR found_ IS NOT NULL))
+  FROM
+    (SELECT
+        MAX(found__) AS found_,
+        MAX(fixed__) AS fixed_,
+        $2 = ARRAY[]::debversion[] AS found_is_empty
+     FROM
+       (SELECT
+          (SELECT UNNEST($2) INTERSECT SELECT UNNEST($1)) AS found__,
+          (SELECT UNNEST($3) INTERSECT SELECT UNNEST($1)) AS fixed__
+       ) AS t2
+    ) AS t1
+
+  $function$
+  """,
+  """
+  COMMENT ON FUNCTION affects (versions debversion[], found debversion[], fixed debversion[])
+    IS 'check if a bug found (fixed) in the given versions affects the package with versions "version"'
+  """,
+  """
+  CREATE TABLE bug_source (
+    bug_id INT REFERENCES bug(id) ON DELETE CASCADE,
+    source TEXT NOT NULL,
+    PRIMARY KEY (bug_id, source)
+  )""",
+  ])

@@ -3,6 +3,7 @@ from pet.models import *
 from pet.vcs import FileNotFound, vcs_backend
 from debian import deb822
 from debian.changelog import Changelog
+import debianbts
 import shutil
 import tempfile
 import os.path
@@ -243,6 +244,20 @@ class ArchiveUpdater(object):
     for suite in self.archive.suites:
       su = SuiteUpdater(suite, self.archive)
       su.run()
+
+class BugTrackerUpdater(object):
+  def __init__(self, bug_tracker):
+    self.session = Session.object_session(bug_tracker)
+    self.bug_tracker = bug_tracker
+  def _delete_unreferenced_bugs(self, sources):
+    print self.session.query(Bug).filter(Bug.bug_tracker=self.bug_tracker)\
+        .join(Bug.bug_sources).filter(~ BugSource.package.in_(sources)).statement
+    pass
+  def run(self, named_trees=None):
+    if packages is None:
+      sources = set([ nt.source for nt in self.session.query(NamedTree).distinct(NamedTree.source) ])
+      self._delete_unreferenced_bugs(sources)
+      bugs = debianbts.get_bugs('src', sources)
 
 class Updater(object):
   def run(self):

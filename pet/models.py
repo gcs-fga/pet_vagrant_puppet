@@ -82,3 +82,14 @@ class Suite(Base):
 class SuitePackage(Base):
   __tablename__ = 'suite_package'
   suite = relation('Suite', backref='packages')
+
+class BugTracker(Base):
+  __tablename__ = 'bug_tracker'
+
+class Bug(Base):
+  __tablename__ = 'bug'
+  bug_tracker = relation('BugTracker', backref='bugs')
+
+class BugSource(Base):
+  __tablename__ = 'bug_source'
+  bug = relation('Bug', backref='bug_sources')

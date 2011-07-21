@@ -1,0 +1,9 @@
+#! /usr/bin/env python
+
+from pet.models import *
+import pet.update
+
+session = Session()
+bts = session.query(BugTracker).one()
+btsu = pet.update.BugTrackerUpdater(bts)
+btsu.run()
