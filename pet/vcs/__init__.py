@@ -65,9 +65,13 @@ class Subversion(VCS):
       path = "tags/{0}/{1}/{2}".format(package, tag, filename)
     else:
       path = "trunk/{0}/{1}".format(package, filename)
-    # TODO: catch exceptions (file not found)
-    stream = StringIO.StringIO()
-    svn.ra.svn_ra_get_file(self.ra, path, self.rev, stream)
+    try:
+      stream = StringIO.StringIO()
+      svn.ra.svn_ra_get_file(self.ra, path, self.rev, stream)
+    except svn.core.SubversionException as e:
+      if e.apr_err == 160013:
+        raise FileNotFound(e.message)
+      raise VCSException(e)
     return stream.getvalue()
   def _list(self, path):
     """
