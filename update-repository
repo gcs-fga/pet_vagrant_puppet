@@ -8,11 +8,16 @@ import sys
 
 session = Session()
 
-for repo_name in sys.argv[1:]:
-  repos = session.query(Repository).filter_by(name=repo_name).all()
-  for r in repos:
-    print "I: Updating repository {0}".format(r.name)
-    ru = pet.update.RepositoryUpdater(r)
-    ru.run()
-
-session.commit()
+try:
+  for repo_name in sys.argv[1:]:
+    repos = session.query(Repository).filter_by(name=repo_name).all()
+    for r in repos:
+      print "I: Updating repository {0}".format(r.name)
+      ru = pet.update.RepositoryUpdater(r)
+      ru.run()
+  session.commit()
+except KeyboardInterrupt:
+  print "E: Interrupted."
+  session.commit()
+except:
+  session.rollback()

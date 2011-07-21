@@ -172,6 +172,9 @@ class RepositoryUpdater(object):
       except Exception as e:
         self.session.rollback()
         print "E: error while updating package {0}: {1}".format(p.name, e)
+      except:
+        self.session.rollback()
+        raise
   def run(self):
     self.update_package_list()
     self.update_packages()
