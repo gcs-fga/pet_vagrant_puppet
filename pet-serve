@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+
+import pet.web
+from paste.httpserver import serve
+
+app = pet.web.main()
+serve(app, host='0.0.0.0')

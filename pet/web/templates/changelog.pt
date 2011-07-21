@@ -1,0 +1,5 @@
+<div class="changelog">
+<pre>
+<span tal:replace="changelog" />
+</pre>
+</div>
