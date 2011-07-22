@@ -1,5 +1,19 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <body>
-Hihi.
+<table>
+<div tal:omit-tag="" tal:repeat="cl classes.iterkeys()">
+  <tr><th><span tal:replace="cl">rc_bugs</span></th></tr>
+  <tr tal:repeat="p classes[cl]">
+    <td><span tal:replace="p.name">a-package</span></td>
+    <td><span tal:replace="p.version">0.1-1</span></td>
+    <td>
+      <span tal:omit-tag="" tal:repeat="b p.bugs">
+	<a href="http://bugs.debian.org/${b.bug_number}">${b.bug_number}</a>
+      </span>
+    </td>
+  </tr>
+</div>
+</table>
 </body>
 </html>

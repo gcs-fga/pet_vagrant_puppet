@@ -18,7 +18,7 @@ def main(global_config=None, **settings):
   config = Configurator(settings=settings)
   config.add_static_view('static', 'pet.web:static')
 
-  config.add_route('overview', '/overview')
+  config.add_route('overview', '/overview/{repository_name}')
   config.add_route('changelog', '/changelog/{named_tree_id}')
   config.scan()
 

@@ -1,3 +1,4 @@
+from pet.classifier import Classifier
 from pet.models import *
 
 import debian.changelog
@@ -9,7 +10,16 @@ from sqlalchemy.orm import exc
 
 @view_config(route_name='overview', renderer='pet.web:templates/overview.pt')
 def overview(request):
-  return {'foo': 'bar'}
+  overview = dict()
+
+  nt_cond = (Repository.name == 'svn') & (NamedTree.type == 'branch') & (NamedTree.name == None)
+  suite_cond = "1=1"
+  bt_cond = "1=1"
+
+  classifier = Classifier(request.session, nt_cond, suite_cond, bt_cond)
+  overview['classes'] = classifier.classify()
+
+  return overview
 
 @view_config(route_name='changelog', renderer='pet.web:templates/changelog.pt')
 def changelog(request):
