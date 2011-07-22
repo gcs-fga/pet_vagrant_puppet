@@ -2,6 +2,9 @@
 from os.path import relpath
 import svn.core, svn.client, svn.ra
 import StringIO
+import urllib2
+import urllib
+import json
 
 class VCSException(Exception):
   pass
@@ -188,4 +191,113 @@ class Subversion(VCS):
           known_trunk.commit_id = str(commit_id)
           add_changed(known_trunk)
 
+    return changed
+
+@_vcs_backend("git")
+class Git(VCS):
+  def __init__(self, repository):
+    self.root = repository.root
+    self.web_root = repository.web_root
+    self._summary_cache = None
+  def link(self, package, filename=None, directory=False, branch=None, tag=None):
+    assert not (branch and tag), "cannot give both branch and tag"
+    if filename is not None and not directory:
+      url = "/{0}.git;a=blob;f={1}".format(urllib.quote(package), urllib.quote(filename))
+    elif filename is not None and directory:
+      url = "/{0}.git;a=tree;f={1}".format(urllib.quote(package), urllib.quote(filename))
+    else:
+      url = ";a=shortlog"
+
+    if branch:
+      url += ";h=refs/heads/{0}".format(urllib.quote(branch))
+    elif tag:
+      url += ";h=refs/tags/{0}".format(urllib.quote(tag))
+
+    return self.web_root + url
+  def file(self, package, filename, branch=None, tag=None):
+    """
+    returns file contents
+    """
+    assert not (branch and tag), "cannot give both branch and tag"
+    if branch is not None:
+      extra = ';h=refs/heads/{0}'.format(urllib.quote(branch))
+    elif tag is not None:
+      extra = ';h=refs/tags/{0}'.format(urllib.quote(tag))
+    else:
+      extra = ""
+    url = "{0}/{1}.git;a=blob_plain;f={2}{3}".format(self.web_root, urllib.quote(package), urllib.quote(filename), extra)
+
+    try:
+      f = urllib2.urlopen(url)
+      contents = f.read()
+      f.close()
+    except urllib2.HTTPError as e:
+      if e.code == 404:
+        return None
+      raise
+    return contents
+  @property
+  def _summary(self):
+    if self._summary_cache is None:
+      f = urllib2.urlopen(self.root)
+      contents = f.read()
+      f.close()
+      self._summary_cache = json.loads(contents)
+    return self._summary_cache
+  @property
+  def packages(self):
+    return self._summary.keys()
+  def branches(self, package):
+    branches = self._summary[package]['branches'].keys()
+    branches.append(None)
+    return branches
+  def tags(self, package):
+    return self._summary[package]['tags']
+  def changed_named_trees(self, session, named_trees_by_package):
+    # XXX: This function is ugly.
+    from pet.models import NamedTree
+    s = self._summary
+
+    changed = {}
+
+    for package, nts in named_trees_by_package.iteritems():
+      def add_changed(named_tree):
+        changed.setdefault(package, []).append(named_tree)
+      ps = s.get(package.name)
+      if ps is None:
+        for nt in nts:
+          session.delete(nt)
+      else:
+        nts_by_type = dict(branch={}, tag={})
+        trunk = None
+        for nt in nts:
+          if nt.type == 'branch' and nt.name is None:
+            trunk = nt
+          else:
+            nts_by_type[nt.type][nt.name] = nt
+        # add an alias for now...
+        ps['tag'] = ps['tags']
+        ps['branch'] = ps['branches']
+        for type in ('branch', 'tag'):
+          nts = nts_by_type[type]
+          known = ps[type]
+          for name, commit_id in known.iteritems():
+            nt = nts.get(name, None)
+            if nt is None:
+              nt = NamedTree(package=package, type=type, name=name, commit_id=commit_id)
+              add_changed(nt)
+              session.add(nt)
+            elif nt.commit_id != commit_id:
+              nt.commit_id = commit_id
+              add_changed(nt)
+          for name, nt in nts.iteritems():
+            if name not in known:
+              session.delete(nt)
+        if trunk is None:
+          trunk = NamedTree(package=package, type='branch', name=None, commit_id=ps['trunk'])
+          add_changed(trunk)
+          session.add(trunk)
+        elif trunk.commit_id != ps['trunk']:
+          trunk.commit_id = ps['trunk']
+          add_changed(trunk)
     return changed
