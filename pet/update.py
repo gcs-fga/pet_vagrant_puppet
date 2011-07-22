@@ -51,7 +51,7 @@ class NamedTreeUpdater(object):
     if not changed and not self.force: return
     self.session.query(Patch).filter_by(named_tree=self.named_tree).delete()
     if patches.contents:
-      for line in patches.splitlines():
+      for line in patches.contents.splitlines():
         if line.startswith("#"):
           continue
         fields = line.split()
@@ -110,17 +110,17 @@ class PackageUpdater(object):
   def _update_named_tree_list(self, type, known, existing):
     changed = []
 
-    for name, nt in known.items():
+    for name, nt in known.iteritems():
       commit_id = existing.get(name, None)
       if commit_id is None:
         self.session.delete(nt)
       else:
-        nt.commit_id = commit_id
+        nt.commit_id = str(commit_id)
         changed.append(nt)
 
-    for name, commit_id in existing.items():
+    for name, commit_id in existing.iteritems():
       if name not in known:
-        nt = NamedTree(type=type, name=name, commit_id=commit_id, package=self.package)
+        nt = NamedTree(type=type, name=name, commit_id=str(commit_id), package=self.package)
         self.session.add(nt)
         changed.append(nt)
 
@@ -147,10 +147,11 @@ class PackageUpdater(object):
     self.update_named_trees()
 
 class RepositoryUpdater(object):
-  def __init__(self, repository):
+  def __init__(self, repository, force=False):
     self.session = Session.object_session(repository)
     self.repository = repository
     self.vcs = vcs_backend(repository)
+    self.force = force
   def update_package_list(self):
     self.session.begin_nested()
     try:
@@ -159,7 +160,7 @@ class RepositoryUpdater(object):
         known_packages[p.name] = p
       existing_packages = self.vcs.packages
 
-      for name, p in known_packages.items():
+      for name, p in known_packages.iteritems():
         if name not in existing_packages:
           self.session.delete(p)
       for name in existing_packages:
@@ -170,7 +171,29 @@ class RepositoryUpdater(object):
     except:
       self.session.rollback()
       raise
-  def update_packages(self):
+  def update_changed_packages(self):
+    self.session.begin_nested()
+    try:
+      named_trees_by_package = {}
+      named_trees_count = 0
+      for p in self.repository.packages:
+        named_trees_by_package[p] = p.named_trees
+        named_trees_count += len(named_trees_by_package[p])
+        if len(named_trees_by_package) % 100 == 0:
+          print "D:  loaded {0} packages, {1} named trees".format(len(named_trees_by_package), named_trees_count)
+      print "D: Looking for changes in {0} packages, {1} named trees.".format(len(named_trees_by_package), named_trees_count)
+      changed = self.vcs.changed_named_trees(self.session, named_trees_by_package)
+      print "D: Found {0} changed packages.".format(len(changed))
+
+      ntu = NamedTreeUpdater()
+      for p, nts in changed.iteritems():
+        for nt in nts:
+          ntu.run(nt, p, self.vcs)
+      self.session.commit()
+    except:
+      self.session.rollback()
+      raise
+  def update_all_packages(self):
     for p in self.repository.packages:
       pu = PackageUpdater()
       self.session.begin_nested()
@@ -187,7 +210,10 @@ class RepositoryUpdater(object):
         raise
   def run(self):
     self.update_package_list()
-    self.update_packages()
+    if self.force:
+      self.update_all_packages()
+    else:
+      self.update_changed_packages()
 
 class SuiteUpdater(object):
   def __init__(self, suite, archive, tmpdir=None):

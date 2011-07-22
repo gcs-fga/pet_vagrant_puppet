@@ -21,3 +21,4 @@ except KeyboardInterrupt:
   session.commit()
 except:
   session.rollback()
+  raise

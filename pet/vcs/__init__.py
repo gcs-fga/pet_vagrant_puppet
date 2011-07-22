@@ -82,7 +82,7 @@ class Subversion(VCS):
       cache = dict()
       for name, dirent in entries[0].items():
         if dirent.kind != svn.core.svn_node_dir: continue
-        cache[name] = str(dirent.created_rev)
+        cache[name] = dirent.created_rev
       self._cache[path] = cache
 
     return self._cache[path]
@@ -92,10 +92,8 @@ class Subversion(VCS):
     returns a list of known packages in the repository.
     """
     return self._list("trunk").keys()
-  def branches(self, package, if_changed_since=None):
+  def branches(self, package):
     root = self._list("")
-    if if_changed_since and max(root, key=lambda x: x[1]) <= if_changed_since:
-      return None
     trunk = self._list("trunk")
     branches = { None: trunk[package] }
     all_branches = self._list("branches")
@@ -104,9 +102,90 @@ class Subversion(VCS):
       if package in branch:
         branches[name] = branch[package]
     return branches
-  def tags(self, package, if_changed_since=None):
-    if if_changed_since:
-      tags = self._list("tags")
-      if tags[package] == if_changed_since:
-        return None
+  def tags(self, package):
     return self._list("tags/{0}".format(package))
+  def changed_named_trees(self, session, named_trees_by_package):
+    # XXX: This function is ugly.
+    from pet.models import NamedTree
+    # We assume that all named_trees for a package were updated at the same time.
+    # This means we can skip looking into a directory, if we already have a
+    # named_tree with a higher commit_id.
+    changed = {}
+    trunk = self._list("trunk")
+    tags = self._list("tags")
+    branches = self._list("branches")
+
+    for package, nts in named_trees_by_package.items():
+      def add_changed(named_tree):
+        changed.setdefault(package, []).append(named_tree)
+
+      package_name = package.name
+      known_tags = {}
+      known_branches = {}
+      known_trunk = None
+
+      for nt in nts:
+        if nt.type == 'tag':
+          known_tags[nt.name] = nt
+        elif nt.type == 'branch' and nt.name is not None:
+          known_branches[nt.name] = nt
+        elif nt.type == 'branch' and nt.name is None:
+          known_trunk = nt
+        else:
+          raise Exception("unknown named_tree type (type={0}, name={1})".format(nt.type, nt.name))
+
+      if package_name not in tags:
+        for nt in known_tags.itervalues():
+          session.delete(nt)
+      else:
+        if len(known_tags) > 0:
+          highest_tag = max(known_tags.itervalues(), key=lambda nt: int(nt.commit_id))
+        else:
+          highest_tag = -1
+        if tags[package_name] > highest_tag:
+          existing_tags = self._list("tags/{0}".format(package_name))
+          for name, nt in known_tags.iteritems():
+            commit_id = existing_tags.get(name, None)
+            if commit_id is None:
+              session.delete(nt)
+            elif commit_id > int(nt.commit_id):
+              nt.commit_id = str(commit_id)
+              add_changed(nt)
+
+          for name, commit_id in existing_tags.iteritems():
+            if name not in known_tags:
+              nt = NamedTree(package=package, type='tag', name=name, commit_id=str(commit_id))
+              add_changed(nt)
+              session.add(nt)
+
+      for branch_name in branches.iterkeys():
+        branch = self._list("branches/{0}".format(branch_name))
+        commit_id = branch.get(package_name, None)
+        if commit_id is not None:
+          nt = known_branches.get(branch_name, None)
+          if nt is None:
+            nt = NamedTree(package=package, type='branch', name=branch_name, commit_id=str(commit_id))
+            add_changed(nt)
+            session.add(nt)
+          elif commit_id > int(nt.commit_id):
+            nt.commit_id = str(commit_id)
+            add_changed(nt)
+        else:
+          nt = known_branches.get(branch_name, None)
+          if nt is not None:
+            session.delete(nt)
+
+      if known_trunk is None:
+        if package_name in trunk:
+          nt = NamedTree(package=package, type='branch', name=None, commit_id=str(trunk[package_name]))
+          add_changed(nt)
+          session.add(nt)
+      else:
+        commit_id = trunk.get(package_name, None)
+        if commit_id is None:
+          session.delete(known_trunk)
+        elif commit_id > int(known_trunk.commit_id):
+          known_trunk.commit_id = str(commit_id)
+          add_changed(known_trunk)
+
+    return changed
