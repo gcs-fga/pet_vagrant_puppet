@@ -175,12 +175,10 @@ class RepositoryUpdater(object):
     self.session.begin_nested()
     try:
       named_trees_by_package = {}
-      named_trees_count = 0
       for p in self.repository.packages:
-        named_trees_by_package[p] = p.named_trees
-        named_trees_count += len(named_trees_by_package[p])
-        if len(named_trees_by_package) % 100 == 0:
-          print "D:  loaded {0} packages, {1} named trees".format(len(named_trees_by_package), named_trees_count)
+        named_trees_by_package[p] = []
+      for nt in self.session.query(NamedTree).join(NamedTree.package).filter(Package.repository==self.repository):
+        named_trees_by_package[nt.package].append(nt)
       print "D: Looking for changes in {0} packages, {1} named trees.".format(len(named_trees_by_package), named_trees_count)
       changed = self.vcs.changed_named_trees(self.session, named_trees_by_package)
       print "D: Found {0} changed packages.".format(len(changed))
