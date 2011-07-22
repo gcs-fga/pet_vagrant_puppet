@@ -17,7 +17,7 @@ class _BugReport(object):
     from pet.models import Session, BugSource
     session = Session.object_session(bug)
 
-    session.begin_nested()
+    # TODO: do this in a transaction; move creating a bug here (if None is passed in)
     try:
       assert bug.bug_number == self.bug_number
       bug.severity = self.severity
@@ -43,9 +43,7 @@ class _BugReport(object):
         bug_sources.append(bs)
       bug.bug_sources = bug_sources
 
-      session.commit()
     except:
-      session.rollback()
       raise
 
 class _DebianBugReport(_BugReport):
