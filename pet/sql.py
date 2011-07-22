@@ -264,3 +264,11 @@ DBUpdater().add(9, statements=[
     ADD COLUMN last_modified TIMESTAMP(0) WITHOUT TIME ZONE
   """,
   ])
+
+DBUpdater().add(10, statements=[
+  """
+  ALTER TABLE suite_package
+    DROP CONSTRAINT IF EXISTS suite_package_pkey,
+    ADD PRIMARY KEY (suite_id, component, source, version)
+  """,
+  ])
