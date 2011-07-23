@@ -72,15 +72,14 @@ class ClassifiedPackage(object):
     return False
 
 class Classifier(object):
-  def __init__(self, session, named_tree_condition, suite_condition, bug_tracker_condition):
+  def __init__(self, session, named_trees, suite_condition, bug_tracker_condition):
     self.session = session
-    named_trees = session.query(NamedTree).join(NamedTree.package).join(Package.repository) \
-        .filter(named_tree_condition).order_by(Package.name, Package.repository_id)
+    sorted_named_trees = named_trees.join(NamedTree.package) \
+        .order_by(Package.name, Package.repository_id, Package.id)
 
     bug_sources = session.query(BugSource) \
         .join(BugSource.bug).join((NamedTree, BugSource.source == NamedTree.source)) \
-        .join(NamedTree.package).join(Package.repository) \
-        .filter(named_tree_condition) \
+        .filter(NamedTree.id.in_(named_trees.from_self(NamedTree.id).subquery())) \
         .filter(bug_tracker_condition) \
         .order_by(Bug.severity.desc(), Bug.bug_number) \
         .filter(Bug.done == False) \
@@ -91,8 +90,7 @@ class Classifier(object):
 
     suite_packages_query = session.query(SuitePackage).join(SuitePackage.suite) \
         .join((NamedTree, SuitePackage.source == NamedTree.source)) \
-        .join(NamedTree.package).join(Package.repository) \
-        .filter(named_tree_condition) \
+        .filter(NamedTree.id.in_(named_trees.from_self(NamedTree.id).subquery())) \
         .filter(suite_condition) \
         .order_by(SuitePackage.version.desc()) \
         .options(joinedload(SuitePackage.suite))
@@ -118,7 +116,7 @@ class Classifier(object):
       tags.setdefault(t.package_id, []).append(t)
 
     self.packages = []
-    for nt in named_trees:
+    for nt in sorted_named_trees:
       self.packages.append(ClassifiedPackage(nt, bugs.get(nt.source, []), suite_packages.get(nt.source, []), tags.get(nt.package_id, [])))
 
   def classify(self):

@@ -14,14 +14,18 @@ class Overview(object):
   def __init__(self, request):
     self.request = request
     self.session = request.session
+    self.team_name = request.matchdict['team_name']
   def changelog_url(self, named_tree):
     return route_url('changelog', self.request, named_tree_id=named_tree.id)
   def __call__(self):
-    nt_cond = (Repository.name == self.request.matchdict['repository_name']) & (NamedTree.type == 'branch') & (NamedTree.name == None)
+    named_trees = self.session.query(NamedTree) \
+        .join(NamedTree.package).join(Package.repository) \
+        .join(Repository.team).filter(Team.name == self.team_name) \
+        .filter((NamedTree.type == 'branch') & (NamedTree.name == None))
     suite_cond = "1=1"
     bt_cond = "1=1"
 
-    classifier = Classifier(self.session, nt_cond, suite_cond, bt_cond)
+    classifier = Classifier(self.session, named_trees, suite_cond, bt_cond)
 
     return {
       "classified": classifier.classify(),
