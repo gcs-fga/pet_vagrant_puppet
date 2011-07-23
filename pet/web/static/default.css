@@ -1,0 +1,197 @@
+/*
+ * Copyright 200,7 Martín Ferrari <martin.ferrari@gmail.com>
+ * Copyright 2007, Damyan Ivanov <dmn@debian.org>
+ *
+ * Released under the terms of the GNU GPL 2
+ */
+/* vim:ts=4:sw=4:et:ai:sts=4:syntax=css
+ */
+body {
+    background: white;
+    color: black;
+    margin: 0;
+    padding: 8px;
+}
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+td, th {
+    border: 1px solid black;
+    padding: 0.2em;
+}
+th.clickable, th.clickable a, th.clickable a:visited {
+    background: #404040;
+    color: white;
+}
+.balloon table, .balloon table td, .balloon table th {
+    border: none;
+    vertical-align: top;
+}
+a {
+    text-decoration: none;
+}
+/*  before enabling this, think about the link colors -- they all have to
+be visible with the new background
+tr:hover td, tr:hover th {
+background: #F5F5B5;
+color: black;
+}
+ */
+/* From ikiwiki templates */
+.popup {
+    border-bottom: 1px dotted;
+}
+.popup .balloon,
+.popup .paren,
+.popup .expand {
+    display: none;
+}
+.popup:hover .balloon,
+.popup:focus .balloon {
+    position: absolute;
+    display: block;
+    min-width: 20em;
+    max-width: 40em;
+    max-height: 75%;
+    overflow: auto;
+    margin: 0em 0 0 -10em;
+    padding: 0.5em;
+    border: 2px outset #F5F5B5;     /* light yellowish */
+    background: #F5F5B5;            /* light yellowish */
+    color: black;
+    /* Nonstandard, but very nice. */
+    opacity: 0.95;
+    -moz-opacity: 0.95;
+    filter: alpha(opacity=95);
+}
+
+span.patches:hover span.balloon {
+    margin-left: 0;
+}
+
+span.balloon span {
+    display: block;
+}
+
+#main_table {
+    width: 95%;
+}
+.pkg .popup .balloon {
+    margin-left: 0;
+}
+.todo {
+    background: #ADDBE6;    /* lightblue */
+}
+.pkg-moreinfo {
+    float: right;
+    font-size: smaller;
+}
+.pkg-name-mismatch {
+    font-weight: bold;
+    color: red;
+}
+.arch-versions {
+    float: right;
+    font-size: smaller;
+}
+.non-group {
+    font-size: smaller;
+    font-weight: bold;
+    color: red;
+}
+.non-maint {
+    font-size: smaller;
+    font-weight: bold;
+    color: maroon;
+}
+.dm-enabled {
+    font-size: smaller;
+    font-weight: bold;
+}
+.binary-packages {
+    font-size: smaller;
+}
+.binary-packages-clickable {
+    font-size: smaller;
+    border-bottom: 1px dotted;
+}
+.binary-packages-clickable span {
+    border-bottom: 0;
+    display: none;
+}
+.repo-rel { }
+.repo-unrel {
+    font-size: smaller;
+    vertical-align: bottom;
+}
+.repo-tag-invalid { font-size: smaller; color: red }
+.repo-tag-missing { font-size: smaller; color: red }
+.repo-tag-wait { font-size: smaller; color: navy }
+.section-non-free { color: red; }
+.section-contrib { color: maroon; }
+.bts-wishlist {
+    color: green;
+}
+.bts-minor {
+    color: #004000;  /* darkgreen */
+}
+.bts-normal, .bts-important {
+}
+.bts-grave, .bts-serious {
+    color: red;
+}
+.bts-critical {
+    color: red;
+    text-decoration: blink;
+}
+.bts-keywords {
+    font-size: smaller;
+}
+.bts-forwarded {
+    font-size: smaller;
+}
+.patches {
+    font-size: smaller;
+    display: inline-block;
+    vertical-align: bottom;
+}
+.patches .baloon {
+    font-family: monospace;
+}
+table.bts-info-details td:first-child {
+    text-align: center;
+}
+div.bts-info div.popup {
+    text-align: center;
+}
+.bts-info-details p {
+    text-indent: -3em;
+    margin: 0 0 0 3em;
+}
+table.bts-info-details td {
+    border: 0;
+    vertical-align: top;
+    text-align: left;
+}
+.watch-file {
+    font-size: smaller;
+}
+.watch-cp-info {
+    font-size: smaller;
+}
+.watch-up-dir {
+    font-size: smaller;
+}
+#options {
+    float: left;
+    padding: .5em;
+    border: 1px black dashed;
+    margin-bottom: 1em;
+}
+#options h2 { font-size: 110%; margin: 0; }
+#options div { display: none }
+#w3org { clear: both; }
+#page_id { border-top: 1px solid black; }
+#selfplug { float: right; }

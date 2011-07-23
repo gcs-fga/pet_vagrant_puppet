@@ -1,19 +1,60 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Package Entropy Tracker</title>
+  <link rel="stylesheet" type="text/css" href="/static/default.css"></link>
+  <script type="text/javascript" src="/static/overview.js"></script>
+</head>
 <body>
-<table>
-<div tal:omit-tag="" tal:repeat="cl classes.iterkeys()">
-  <tr><th><span tal:replace="cl">rc_bugs</span></th></tr>
-  <tr tal:repeat="p classes[cl]">
-    <td><span tal:replace="p.name">a-package</span></td>
-    <td><span tal:replace="p.version">0.1-1</span></td>
-    <td>
-      <span tal:omit-tag="" tal:repeat="b p.bugs">
-	<a href="http://bugs.debian.org/${b.bug_number}">${b.bug_number}</a>
-      </span>
-    </td>
-  </tr>
-</div>
-</table>
+  <h1>Package Entropy Tracker</h1>
+  <table id="main_table">
+<div tal:repeat="cl classes" tal:omit-tag=""><div tal:condition="cl.key in classified" tal:omit-tag="">
+    <thead>
+      <tr><th colspan="5" class="clickable"><a stype="display: block" href="javascript:toggle_visibility('${cl.key}')">${cl.name} (${len(classified[cl.key])})</a></th></tr>
+    </thead>
+    <tbody tal:attributes="id cl.key">
+      <tr><th>Package</th><th>Repository</th><th>Archive</th><th>Bugs</th><th>Upstream</th></tr>
+      <tr tal:repeat="p classified[cl.key]">
+	<td tal:content="p.name">a-package</td>
+	<td tal:attributes="class p.ready_for_upload and 'todo'">
+	  <!-- repository status -->
+	  <span tal:condition="p.highest_tag" class="popup repo-rel">
+	    <a tal:content="p.highest_tag.version" tal:attributes="href view.changelog_url(p.highest_tag)">0.1-1</a>
+	    <span id="${p.highest_tag.id}_rel_chlog_balloon" class="balloon">
+	      <a href="javascript:async_get('${p.highest_tag.id}_rel_chlog_balloon', '${view.changelog_url(p.highest_tag)}')">${p.highest_tag.last_changed_by} &mdash; ${p.highest_tag.last_changed}</a>
+	    </span>
+	  </span>
+	  <span tal:condition="not p.is_tagged" class="popup repo-unrel">
+	    <a tal:attributes="href view.changelog_url(p.named_tree)">(${p.version})</a>
+	    <span id="${p.named_tree.id}_rel_chlog_balloon" class="balloon">
+	      <a href="javascript:async_get('${p.named_tree.id}_rel_chlog_balloon', '${view.changelog_url(p.named_tree)}')">${p.last_changed_by} &mdash; ${p.last_changed}</a>
+	    </span>
+	  </span>
+	</td>
+	<td>
+	  <!-- archive status -->
+	  <a tal:condition="p.suite_packages" href="http://packages.qa.debian.org/${p.source}">${p.highest_archive.version}</a>
+	</td>
+	<td tal:attributes="class not p.todo_bugs or 'todo'">
+	  <!-- bug tracking -->
+	  <div tal:condition="p.bugs" class="bts-info popup" style="text-align: center">
+	    <a href="http://bugs.debian.org/src:${p.source}" tal:content="len(p.bugs)">7</a>
+	    <table class="bts-info-details balloon">
+	      <tr tal:repeat="b p.bugs">
+		<td>
+		  <a class="bts-${b.severity}" href="http://bugs.debian.org/${b.bug_number}">#${b.bug_number}</a>
+		</td>
+		<td tal:content="b.subject">It doesn't work!</td>
+	      </tr>
+	    </table>
+	  </div>
+	</td>
+	<td>
+	  <!-- upstream status -->
+	</td>
+      </tr>
+    </tbody>
+</div></div>
+  </table>
 </body>
 </html>

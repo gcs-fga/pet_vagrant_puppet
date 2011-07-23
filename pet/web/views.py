@@ -6,20 +6,27 @@ import debian.changelog
 from pyramid.view import view_config
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPNotFound
+from pyramid.url import route_url
 from sqlalchemy.orm import exc
 
 @view_config(route_name='overview', renderer='pet.web:templates/overview.pt')
-def overview(request):
-  overview = dict()
+class Overview(object):
+  def __init__(self, request):
+    self.request = request
+    self.session = request.session
+  def changelog_url(self, named_tree):
+    return route_url('changelog', self.request, named_tree_id=named_tree.id)
+  def __call__(self):
+    nt_cond = (Repository.name == self.request.matchdict['repository_name']) & (NamedTree.type == 'branch') & (NamedTree.name == None)
+    suite_cond = "1=1"
+    bt_cond = "1=1"
 
-  nt_cond = (Repository.name == 'svn') & (NamedTree.type == 'branch') & (NamedTree.name == None)
-  suite_cond = "1=1"
-  bt_cond = "1=1"
+    classifier = Classifier(self.session, nt_cond, suite_cond, bt_cond)
 
-  classifier = Classifier(request.session, nt_cond, suite_cond, bt_cond)
-  overview['classes'] = classifier.classify()
-
-  return overview
+    return {
+      "classified": classifier.classify(),
+      "classes": classifier.classes()
+    }
 
 @view_config(route_name='changelog', renderer='pet.web:templates/changelog.pt')
 def changelog(request):
@@ -32,4 +39,4 @@ def changelog(request):
     raise HTTPNotFound()
 
   changelog = debian.changelog.Changelog(changelog_contents, max_blocks=1, strict=False)
-  return { "changelog": str(changelog) }
+  return { "changelog": str(changelog).strip() }

@@ -1,5 +1,1 @@
-<div class="changelog">
-<pre>
-<span tal:replace="changelog" />
-</pre>
-</div>
+<code style="white-space: pre" tal:content="changelog"></code>
