@@ -209,9 +209,9 @@ class Git(VCS):
       url = ";a=shortlog"
 
     if branch:
-      url += ";h=refs/heads/{0}".format(urllib.quote(branch))
+      url += ";hb=refs/heads/{0}".format(urllib.quote(branch))
     elif tag:
-      url += ";h=refs/tags/{0}".format(urllib.quote(tag))
+      url += ";hb=refs/tags/{0}".format(urllib.quote(tag))
 
     return self.web_root + url
   def file(self, package, filename, branch=None, tag=None):
@@ -220,9 +220,9 @@ class Git(VCS):
     """
     assert not (branch and tag), "cannot give both branch and tag"
     if branch is not None:
-      extra = ';h=refs/heads/{0}'.format(urllib.quote(branch))
+      extra = ';hb=refs/heads/{0}'.format(urllib.quote(branch))
     elif tag is not None:
-      extra = ';h=refs/tags/{0}'.format(urllib.quote(tag))
+      extra = ';hb=refs/tags/{0}'.format(urllib.quote(tag))
     else:
       extra = ""
     url = "{0}/{1}.git;a=blob_plain;f={2}{3}".format(self.web_root, urllib.quote(package), urllib.quote(filename), extra)
