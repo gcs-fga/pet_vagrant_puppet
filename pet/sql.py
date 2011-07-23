@@ -314,3 +314,7 @@ DBUpdater().add(11, statements=[
     ADD COLUMN ignore BOOLEAN NOT NULL DEFAULT 'f'
   """,
   ])
+
+DBUpdater().add(12, statements=[
+  "CREATE INDEX ON named_tree (package_id)",
+  ])
