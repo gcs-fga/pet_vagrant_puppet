@@ -272,3 +272,45 @@ DBUpdater().add(10, statements=[
     ADD PRIMARY KEY (suite_id, component, source, version)
   """,
   ])
+
+DBUpdater().add(11, statements=[
+  """
+  CREATE TABLE team (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    maintainer TEXT NOT NULL,
+    url TEXT
+  )""",
+  """
+  ALTER TABLE repository
+    ADD COLUMN team_id INT REFERENCES team(id)
+  """,
+  """
+  ALTER TABLE suite_package
+    DROP CONSTRAINT suite_package_pkey,
+    ADD COLUMN id SERIAL,
+    ADD PRIMARY KEY (id),
+    ADD UNIQUE (suite_id, component, source, version)
+  """,
+  """
+  CREATE TABLE wait (
+    named_tree_id INT NOT NULL REFERENCES named_tree(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    version debversion NOT NULL,
+    comment TEXT,
+    PRIMARY KEY (named_tree_id, name, version)
+  )""",
+  """
+  CREATE TABLE suite_binary (
+    source_id INT NOT NULL REFERENCES suite_package(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    PRIMARY KEY (source_id, name)
+  )""",
+  """
+  CREATE INDEX ON suite_binary (name)
+  """,
+  """
+  ALTER TABLE named_tree
+    ADD COLUMN ignore BOOLEAN NOT NULL DEFAULT 'f'
+  """,
+  ])

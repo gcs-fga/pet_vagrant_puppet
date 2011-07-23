@@ -31,8 +31,12 @@ Base = declarative_base(metadata=metadata)
 class Config(Base):
   __tablename__ = 'config'
 
+class Team(Base):
+  __tablename__ = 'team'
+
 class Repository(Base):
   __tablename__ = 'repository'
+  team = relation('Team', backref='repositories')
 
 class Package(Base):
   __tablename__ = 'package'
@@ -64,6 +68,10 @@ class NamedTree(Base):
   def file(self, filename):
     return self._file(filename).one()
 
+class Wait(Base):
+  __tablename__ = 'wait'
+  named_tree = relation('NamedTree', backref='waits')
+
 class File(Base):
   __tablename__ = 'file'
   named_tree = relation('NamedTree', backref='files')
@@ -82,6 +90,10 @@ class Suite(Base):
 class SuitePackage(Base):
   __tablename__ = 'suite_package'
   suite = relation('Suite', backref='packages')
+
+class SuiteBinary(Base):
+  __tablename__ = 'suite_binary'
+  source = relation('SuitePackage', backref='binaries')
 
 class BugTracker(Base):
   __tablename__ = 'bug_tracker'
