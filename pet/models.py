@@ -74,7 +74,7 @@ class Wait(Base):
 
 class File(Base):
   __tablename__ = 'file'
-  named_tree = relation('NamedTree', backref='files')
+  named_tree = relation('NamedTree', backref=backref('files', passive_deletes=True))
 
 class Patch(Base):
   __tablename__ = 'patch'
