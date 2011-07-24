@@ -142,7 +142,7 @@ class Subversion(VCS):
           session.delete(nt)
       else:
         if len(known_tags) > 0:
-          highest_tag = max(known_tags.itervalues(), key=lambda nt: int(nt.commit_id))
+          highest_tag = int(max(known_tags.itervalues(), key=lambda nt: int(nt.commit_id)).commit_id)
         else:
           highest_tag = -1
         if tags[package_name] > highest_tag:
