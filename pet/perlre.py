@@ -54,7 +54,6 @@ def apply_perlre(regexp, string):
   stage = 0 # 0=pattern, (1=replacement-marker), 2=replacement, 3=flags
   pattern = replacement = flags = ""
   for char in arguments[1:]:
-    print "  at char '{0}', stage={1}, end_marker={2}, last_escape={3}".format(char, stage, end_marker, last_was_escape)
     if stage == 1:
       end_marker = _markers.get(char, char)
       stage = 2
@@ -92,7 +91,7 @@ def apply_perlre(regexp, string):
 
   if flags == '':
     py_flags = 0
-  elif flage == 'i':
+  elif flags == 'i':
     py_flags = re.I
   else:
     raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
