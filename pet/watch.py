@@ -5,11 +5,16 @@ import re
 import urllib2
 from StringIO import StringIO
 import gzip
+from urlparse import urljoin
+from debian.debian_support import Version
 
 class WatchException(Exception):
   pass
 
 class InvalidWatchFile(WatchException):
+  pass
+
+class NotFound(WatchException):
   pass
 
 _re_upstream_version = re.compile(r'^(?:\d+:)?(.*?)(?:-[a-zA-Z0-9+.~]*)?$')
@@ -71,13 +76,14 @@ class WatchRule(object):
     except IndexError:
       raise InvalidWatchFile("Rule '{0}' is invalid.".format(rule))
 
+    pattern = r'\A{0}\Z'.format(pattern)
     self.options = options
     self.homepage = homepage
     self.pattern = re.compile(pattern)
     self.version = version
     self.action = action
   def _mangle(self, regexpes, string):
-    for regexp in regexpes.split(';'):
+    for regexp in regexpes:
       string = apply_perlre(regexp, string)
     return string
   def uversionmangle(self, uversion):
@@ -128,34 +134,78 @@ class WatchFile(object):
         self.rules.append(WatchRule(line))
 
 _re_cpan_url = re.compile('^http://search.cpan.org/')
+_re_http = re.compile('^https?://')
+_re_href = re.compile("""href=(?:"([^"]+)"|'([^']+)'|([^'">]+))""")
+_re_sf = re.compile(r'^http://sf\.net/')
 
 class Watcher(object):
   def __init__(self):
     self._cpan = CPAN()
   def check(self, watch_file):
     watch = WatchFile(watch_file)
+    results = []
+    errors = []
     for rule in watch.rules:
-      self.check_rule(rule)
+      try:
+        result = self.check_rule(rule)
+        if result is not None:
+          results.append(result)
+      except WatchException as e:
+        errors.append(e)
+    results.sort(key=lambda x: x[1], reverse=True)
+    try:
+      return dict(version=results[0][1], url=results[0][0], errors=errors)
+    except IndexError:
+      return dict(errors=errors)
   def check_rule(self, rule):
-    if _re_cpan_url.match(rule.homepage):
-      self._cpan.check(rule.homepage, rule.pattern)
+    try:
+      results = None
+      if _re_cpan_url.match(rule.homepage):
+        results = self._cpan.check(rule.homepage, rule.pattern, rule.uversionmangle)
+      # try by hand if url is unknown to cpan
+      if results is None:
+        homepage = _re_sf.sub('http://qa.debian.org/watch/sf.php/', rule.homepage)
+        fh = urllib2.urlopen(homepage)
+        contents = fh.read()
+        fh.close()
+        if _re_http.match(homepage):
+          # join all groups, only one in non-empty and contains the link
+          links = [ "".join(l) for l in _re_href.findall(contents) ]
+        else:
+          links = contents.split()
+
+        results = []
+        for link in links:
+          match = rule.pattern.search(link)
+          if match:
+            url = urljoin(homepage, link)
+            version = rule.uversionmangle(".".join(match.groups()))
+            results.append((url, Version(version)))
+        results.sort(key=lambda x: x[1], reverse=True)
+    except urllib2.HTTPError as e:
+      if e.code == 404:
+        raise NotFound()
+
+    if len(results) > 0:
+      return results[0]
+    return None
 
 _re_cpan_dist = re.compile(r'/dist/')
 _re_cpan_files = re.compile(r'/authors/id/|/modules/by-module/')
 
 class CPAN(object):
-  def __init__(self, mirror='ftp://ftp.cs.uu.nl/pub/CPAN'):
+  def __init__(self, mirror='ftp://ftp.cs.uu.nl/pub/CPAN/'):
     self.mirror = mirror
     self._dists = None
     self._files = None
 
   def _get_and_uncompress(self, url):
-    response = urllib2.openurl(url)
+    response = urllib2.urlopen(url)
     buf = StringIO(response.read())
     response.close()
     return gzip.GzipFile(fileobj=buf, mode='rb')
 
-  def check(self, homepage, pattern):
+  def check(self, homepage, pattern, uversionmangle=lambda x: x):
     if _re_cpan_dist.search(homepage):
       target = self.dists
     elif _re_cpan_files.search(homepage):
@@ -165,21 +215,23 @@ class CPAN(object):
 
     results = []
     for candidate in target:
-      match = rule.pattern.match(candidate):
+      match = pattern.match(candidate)
       if match:
-        url = "{0}/{1}".format(homepage, candidate)
-        version = ".".join(match.groups)
-        results.append((url, version))
+        url = urljoin(homepage, candidate)
+        version = uversionmangle(".".join(match.groups()))
+        results.append((url, Version(version)))
+    results.sort(key=lambda x: x[1], reverse=True)
     return results
 
   @property
   def dists(self):
     if self._dists is None:
       dists = []
-      contents = self._get_and_uncompress(self.mirror + '/02packages.details.txt.gz')
+      contents = self._get_and_uncompress(urljoin(self.mirror, 'modules/02packages.details.txt.gz'))
       for line in contents:
-        fields = line.split(None, 3)
-        dists.append(fields[2])
+        fields = line.strip().split(None, 3)
+        if len(fields) >= 3:
+          dists.append(fields[2])
       contents.close()
       self._dists = dists
     return self._dists
@@ -195,14 +247,14 @@ class CPAN(object):
 
       current = '' # current directory
       interesting = False # are we interested in files in the current directory?
-      contents = self._get_and_uncompress(self.mirror + '/ls-lR.gz')
+      contents = self._get_and_uncompress(urljoin(self.mirror, 'indices/ls-lR.gz'))
       for line in contents:
         line = line.strip()
         if line == '':
           current = ''
           interesting = False
 
-        match = re_dir.match(line):
+        match = re_dir.match(line)
         if match:
           current = match.group(1)
           interesting = re_interesting.search(current)
