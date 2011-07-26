@@ -3,7 +3,7 @@ import pet
 from sqlalchemy import engine_from_config
 import sqlalchemy.dialects.postgresql
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relation, sessionmaker
+from sqlalchemy.orm import backref, exc, relation, sessionmaker
 from sqlalchemy.schema import MetaData
 import sqlalchemy.types
 
@@ -67,6 +67,10 @@ class NamedTree(Base):
     return self._file(filename).count() != 0
   def file(self, filename):
     return self._file(filename).one()
+
+class WatchResult(Base):
+  __tablename__ = 'watch_result'
+  named_tree = relation('NamedTree', backref='watch_result')
 
 class Wait(Base):
   __tablename__ = 'wait'

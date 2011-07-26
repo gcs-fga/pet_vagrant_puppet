@@ -318,3 +318,17 @@ DBUpdater().add(11, statements=[
 DBUpdater().add(12, statements=[
   "CREATE INDEX ON named_tree (package_id)",
   ])
+
+DBUpdater().add(13, statements=[
+  """
+  CREATE TABLE watch_result (
+    named_tree_id INT PRIMARY KEY NOT NULL REFERENCES named_tree(id) ON DELETE CASCADE,
+    homepage TEXT,
+    upstream_version debversion,
+    download_url TEXT,
+    debian_version debversion, -- mangled Debian version
+    error TEXT,
+    last_checked TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (error IS NOT NULL != (upstream_version IS NOT NULL AND download_url IS NOT NULL AND debian_version IS NOT NULL))
+  )""",
+  ])
