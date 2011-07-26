@@ -248,8 +248,8 @@ class Git(VCS):
   def packages(self):
     return self._summary.keys()
   def branches(self, package):
-    branches = self._summary[package]['branches'].keys()
-    branches.append(None)
+    branches = self._summary[package]['branches']
+    branches[None] = self._summary[package]['trunk']
     return branches
   def tags(self, package):
     return self._summary[package]['tags']
