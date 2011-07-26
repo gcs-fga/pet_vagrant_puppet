@@ -23,20 +23,21 @@ _re_version = re.compile(r'^version=(\d+)')
 _re_cont    = re.compile(r'^(.+)\\$')
 
 _re_comment = re.compile(r'^\s*#')
-_re_options = re.compile(r'^opt(?:ion)?s=("[^"]*"|.*)\s+(.+)')
+_re_options = re.compile(r'^opt(?:ion)?s=(?:"([^"]*)"|(\S*))\s+(.+)')
 _re_mangle  = re.compile(r'mangle$')
 _re_paren   = re.compile(r'(.+)/([^/]*\([^/]+\)[^/]*)$')
 
 class WatchRule(object):
   def __init__(self, rule=None):
-    if rule:
+    if rule is not None:
       self.parse(rule)
   def parse(self, rule):
     options = dict()
     match = _re_options.match(rule)
     if match:
-      rule = match.group(2)
-      for kv in match.group(1).split(","):
+      rule = match.group(3)
+      opts = match.group(1) or match.group(2)
+      for kv in opts.split(","):
         key, value = kv.split("=", 2)
         match = _re_mangle.search(key)
         if match:
@@ -101,7 +102,7 @@ class WatchRule(object):
 
 class WatchFile(object):
   def __init__(self, watch=None):
-    if watch:
+    if watch is not None:
       self.parse(watch)
   def parse(self, watch):
     lines = watch.splitlines()
@@ -120,6 +121,7 @@ class WatchFile(object):
     self.version = None
     self.rules = []
     for line in next_line():
+      line = line.strip()
       if _re_comment.match(line):
         continue
       if self.version is None:
@@ -129,7 +131,7 @@ class WatchFile(object):
           self.version = int(match.group(1))
           if self.version not in (2, 3):
             raise InvalidWatchFile('Only watch files using version 2 or 3 are supported.')
-      else:
+      elif line:
         # collect watch rules
         self.rules.append(WatchRule(line))
 
@@ -153,17 +155,25 @@ class Watcher(object):
       except WatchException as e:
         errors.append(e)
     results.sort(key=lambda x: x[1], reverse=True)
-    try:
-      return dict(version=results[0][1], url=results[0][0], errors=errors)
-    except IndexError:
-      return dict(errors=errors)
+    if len(errors) == 0:
+      errors = None
+    if len(results) == 0:
+      if errors is None:
+        errors = ["NotFound"]
+      if len(watch.rules):
+        homepage = watch.rules[0].homepage
+      else:
+        homepage = None
+      return dict(errors=errors, homepage=homepage)
+    return dict(version=results[0][1], dversionmangle=results[0][2], homepage=results[0][3], url=results[0][0], errors=errors)
   def check_rule(self, rule):
     try:
       results = None
       if _re_cpan_url.match(rule.homepage):
-        results = self._cpan.check(rule.homepage, rule.pattern, rule.uversionmangle)
+        results = self._cpan.check(rule.homepage, rule.pattern, rule.uversionmangle, rule.dversionmangle)
       # try by hand if url is unknown to cpan
       if results is None:
+        results = []
         homepage = _re_sf.sub('http://qa.debian.org/watch/sf.php/', rule.homepage)
         fh = urllib2.urlopen(homepage)
         contents = fh.read()
@@ -174,13 +184,12 @@ class Watcher(object):
         else:
           links = contents.split()
 
-        results = []
         for link in links:
           match = rule.pattern.search(link)
           if match:
             url = urljoin(homepage, link)
             version = rule.uversionmangle(".".join(match.groups()))
-            results.append((url, Version(version)))
+            results.append((url, Version(version), rule.dversionmangle, rule.homepage))
         results.sort(key=lambda x: x[1], reverse=True)
     except urllib2.HTTPError as e:
       if e.code == 404:
@@ -205,7 +214,7 @@ class CPAN(object):
     response.close()
     return gzip.GzipFile(fileobj=buf, mode='rb')
 
-  def check(self, homepage, pattern, uversionmangle=lambda x: x):
+  def check(self, homepage, pattern, uversionmangle=lambda x: x, dversionmangle=lambda x: x):
     if _re_cpan_dist.search(homepage):
       target = self.dists
     elif _re_cpan_files.search(homepage):
@@ -217,9 +226,9 @@ class CPAN(object):
     for candidate in target:
       match = pattern.match(candidate)
       if match:
-        url = urljoin(homepage, candidate)
+        url = urljoin(self.mirror, candidate)
         version = uversionmangle(".".join(match.groups()))
-        results.append((url, Version(version)))
+        results.append((url, Version(version), dversionmangle, homepage))
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 

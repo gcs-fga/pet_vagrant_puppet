@@ -2,6 +2,7 @@
 from pet.models import *
 from pet.vcs import FileNotFound, vcs_backend
 from pet.bts import DebianBugTracker
+from pet.watch import Watcher
 from debian import deb822
 from debian.changelog import Changelog
 import shutil
@@ -9,6 +10,7 @@ import tempfile
 import os.path
 import subprocess
 import sqlalchemy.orm.exc
+from sqlalchemy.orm import joinedload
 
 class NamedTreeUpdater(object):
   def delete_old_files(self):
@@ -92,6 +94,8 @@ class NamedTreeUpdater(object):
     else:
       nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
       nt.versions = []
+  def update_watch(self):
+    watch_file, changed = self.file("debian/watch")
   def run(self, named_tree, package, vcs, force=False):
     self.session = Session.object_session(named_tree)
     self.named_tree = named_tree
@@ -105,6 +109,7 @@ class NamedTreeUpdater(object):
     self.update_patches()
     self.update_control()
     self.update_changelog()
+    self.update_watch()
 
 class PackageUpdater(object):
   def _update_named_tree_list(self, type, known, existing):
@@ -136,11 +141,12 @@ class PackageUpdater(object):
   def update_named_trees(self):
     ntu = NamedTreeUpdater()
     for nt in self.package.named_trees:
-      ntu.run(nt, self.package, self.vcs)
-  def run(self, package, vcs):
+      ntu.run(nt, self.package, self.vcs, force=self.force)
+  def run(self, package, vcs, force=False):
     self.session = Session.object_session(package)
     self.package = package
     self.vcs = vcs
+    self.force = force
 
     self.update_tag_list()
     self.update_branch_list()
@@ -197,12 +203,12 @@ class RepositoryUpdater(object):
       self.session.begin_nested()
       try:
         print "I: Updating package {0}".format(p.name)
-        pu.run(p, self.vcs)
+        pu.run(p, self.vcs, force=self.force)
         self.session.commit()
       # XXX: Do we want to catch all exceptions here? Probably yes.
-      except Exception as e:
-        self.session.rollback()
-        print "E: error while updating package {0}: {1}".format(p.name, e)
+      #except Exception as e:
+      #  self.session.rollback()
+      #  print "E: error while updating package {0}: {1}".format(p.name, e)
       except:
         self.session.rollback()
         raise
@@ -313,7 +319,7 @@ class BugTrackerUpdater(object):
     # TODO: Unify code path once _delete_unreferenced_bugs is fixed
     # to no longer need the list of sources.
     if named_trees is None:
-      sources = list(set([ nt.source for nt in self.session.query(NamedTree) ]))
+      sources = [ s[0] for s in self.session.query(NamedTree.source).distinct() ]
       self._delete_unreferenced_bugs(sources)
       bug_reports = bts.search(sources)
       self._update_bugs(bug_reports)
@@ -321,6 +327,38 @@ class BugTrackerUpdater(object):
       sources = list(set([ nt.source for nt in named_trees ]))
       bug_reports = bts.search(sources)
       self._update_bugs(bug_reports)
+
+class WatchUpdater(object):
+  def __init__(self, session):
+    self.session = session
+    self.watcher = Watcher()
+
+  def update_watch(self, watch):
+    if watch.contents is None:
+      return
+    result = self.watcher.check(watch.contents)
+    if result['errors'] is None:
+      wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], upstream_version=str(result['version']), download_url=result['url'], debian_version=result['dversionmangle'](watch.named_tree.version))
+    else:
+      wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], error=", ".join(result['errors']))
+    self.session.add(wr)
+  def run(self):
+    self.session.begin_nested()
+    try:
+      named_trees = self.session.query(NamedTree).filter_by(type='branch', name=None)
+      watches = self.session.query(File) \
+          .filter(File.name == 'debian/watch') \
+          .filter(File.named_tree_id.in_(named_trees.from_self(NamedTree.id).subquery())) \
+          .options(joinedload(File.named_tree))
+      self.session.query(WatchResult) \
+          .filter(WatchResult.named_tree_id.in_(named_trees.from_self(NamedTree.id).subquery())).delete(False)
+      for watch in watches:
+        print "D: checking watch for {0}".format(watch.named_tree.source)
+        self.update_watch(watch)
+    except:
+      self.session.rollback()
+      raise
+    self.session.commit()
 
 class Updater(object):
   def run(self):
