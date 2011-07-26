@@ -51,6 +51,11 @@
 	</td>
 	<td>
 	  <!-- upstream status -->
+	  <div tal:condition="p.watch" tal:omit-tag="">
+	    <a tal:condition="p.watch.download_url" tal:attributes="href p.watch.download_url">${p.watch.upstream_version}</a>
+	    <span tal:condition="p.watch.error" tal:replace="p.watch.error"/>
+	    <a tal:condition="p.watch.homepage" tal:attributes="href p.watch.homepage">(Browse)</a>
+	  </div>
 	</td>
       </tr>
     </tbody>

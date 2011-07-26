@@ -70,7 +70,7 @@ class NamedTree(Base):
 
 class WatchResult(Base):
   __tablename__ = 'watch_result'
-  named_tree = relation('NamedTree', backref='watch_result')
+  named_tree = relation('NamedTree', backref=backref('watch_result', uselist=False))
 
 class Wait(Base):
   __tablename__ = 'wait'

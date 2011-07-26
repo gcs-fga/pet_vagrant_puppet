@@ -2,6 +2,7 @@ from pet.models import *
 
 from sqlalchemy.orm import aliased, joinedload
 from sqlalchemy import func
+from apt_pkg import version_compare
 
 class ClassifiedPackage(object):
   def __init__(self, named_tree, bugs, suite_packages, tags):
@@ -9,6 +10,7 @@ class ClassifiedPackage(object):
     self.bugs = bugs
     self.suite_packages = suite_packages
     self.tags = tags
+    self.watch = self.named_tree.watch_result
   name = property(lambda self: self.named_tree.package.name)
   source = property(lambda self: self.named_tree.source)
   version = property(lambda self: self.named_tree.version)
@@ -71,10 +73,26 @@ class ClassifiedPackage(object):
         return True
     return False
 
+  @property
+  def newer_upstream(self):
+    if self.watch and self.watch.upstream_version:
+      return version_compare(self.watch.upstream_version, self.watch.debian_version) > 0
+    return False
+
+  @property
+  def watch_problem(self):
+    if self.watch:
+      if self.watch.error:
+        return True
+      if version_compare(self.watch.upstream_version, self.watch.debian_version) < 0:
+        return True
+    return False
+
 class Classifier(object):
   def __init__(self, session, named_trees, suite_condition, bug_tracker_condition):
     self.session = session
     sorted_named_trees = named_trees.join(NamedTree.package) \
+        .options(joinedload(NamedTree.watch_result)) \
         .order_by(Package.name, Package.repository_id, Package.id)
 
     bug_sources = session.query(BugSource) \
@@ -128,6 +146,10 @@ class Classifier(object):
         cls = 'rc_bugs'
       elif p.missing_tag:
         cls = 'missing_tag'
+      elif p.newer_upstream:
+        cls = 'new_upstream'
+      elif p.watch_problem:
+        cls = 'watch_problem'
       else:
         cls = 'other'
       classified.setdefault(cls, []).append(p)
@@ -137,5 +159,7 @@ class Classifier(object):
       { 'name': "Ready For Upload", 'key': 'ready_for_upload' },
       { 'name': "Packages with RC bugs", 'key': 'rc_bugs' },
       { 'name': "Missing tags", 'key': 'missing_tag' },
+      { 'name': "Newer upstream version", 'key': 'new_upstream' },
+      { 'name': 'Problems with debian/watch', 'key': 'watch_problem' },
       { 'name': "Other packages", 'key': 'other' },
       ]
