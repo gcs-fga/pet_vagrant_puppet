@@ -3,17 +3,23 @@
 from pet.models import *
 from pet.vcs import vcs_backend
 import pet.update
+from argparse import ArgumentParser
 
 import sys
+
+parser = ArgumentParser(description='update a repository')
+parser.add_argument('-f', '--force', action='store_true', default=False)
+parser.add_argument('repositories', nargs='+')
+options = parser.parse_args(sys.argv[1:])
 
 session = Session()
 
 try:
-  for repo_name in sys.argv[1:]:
+  for repo_name in options.repositories:
     repos = session.query(Repository).filter_by(name=repo_name).all()
     for r in repos:
       print "I: Updating repository {0}".format(r.name)
-      ru = pet.update.RepositoryUpdater(r)
+      ru = pet.update.RepositoryUpdater(r, force=options.force)
       ru.run()
   session.commit()
 except KeyboardInterrupt:
