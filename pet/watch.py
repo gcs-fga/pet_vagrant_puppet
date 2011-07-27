@@ -38,14 +38,14 @@ class WatchRule(object):
       rule = match.group(3)
       opts = match.group(1) or match.group(2)
       for kv in opts.split(","):
-        key, value = kv.split("=", 2)
+        key, value = kv.split("=", 1)
         match = _re_mangle.search(key)
         if match:
           options[key] = value.split(';')
         else:
           options[key] = value
 
-    fields = rule.split(None, 4)
+    fields = rule.split(None, 3)
 
     # When the homepage contains parentheses in the last component use that as pattern.
     # In that case the line has only three (not four) fields so we have to split again.
@@ -54,7 +54,7 @@ class WatchRule(object):
       if match:
         homepage = match.group(1)
         pattern = match.group(2)
-        fields = rule.split(None, 3)
+        fields = rule.split(None, 2)
         try:
           version = fields[1]
         except IndexError:
@@ -238,7 +238,7 @@ class CPAN(object):
       dists = []
       contents = self._get_and_uncompress(urljoin(self.mirror, 'modules/02packages.details.txt.gz'))
       for line in contents:
-        fields = line.strip().split(None, 3)
+        fields = line.strip().split(None, 2)
         if len(fields) >= 3:
           dists.append(fields[2])
       contents.close()
