@@ -38,6 +38,10 @@ class RegexpError(Exception):
   pass
 
 def apply_perlre(regexp, string):
+  regexp = regexp.strip()
+  if regexp == "":
+    return string
+
   match_op = _re_op.match(regexp)
   if not match_op:
     raise RegexpError("Unknown operator in regular expression '{0}'.".format(regexp))
