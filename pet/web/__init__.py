@@ -20,6 +20,7 @@ def main(global_config=None, **settings):
 
   config.add_route('overview', '/{team_name}/pet.cgi')
   config.add_route('changelog', '/changelog/{named_tree_id}')
+  config.add_route('notify', '/{team_name}/pet-notify.cgi')
   config.scan()
 
   return config.make_wsgi_app()
