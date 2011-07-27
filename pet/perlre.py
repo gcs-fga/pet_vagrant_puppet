@@ -31,7 +31,7 @@ import re
 
 _re_op = re.compile(r'^(s|tr|y)(.*)$')
 _markers = { '{': '}', '(': ')', '[': ']' }
-_re_backref_all = re.compile(r'$&')
+_re_backref_all = re.compile(r'\$&')
 _re_backref = re.compile(r'\$(\d)')
 
 class RegexpError(Exception):
@@ -96,7 +96,7 @@ def apply_perlre(regexp, string):
   else:
     raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
 
-  replacement = re.sub(_re_backref_all, r'\0', replacement)
+  replacement = re.sub(_re_backref_all, r'\\0', replacement)
   replacement = re.sub(_re_backref, r'\\\1', replacement)
 
   return re.sub(pattern, replacement, string)
