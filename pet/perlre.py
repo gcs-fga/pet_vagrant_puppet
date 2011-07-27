@@ -93,14 +93,19 @@ def apply_perlre(regexp, string):
   if stage != 3:
     raise RegexpError("Invalid regular expression.")
 
-  if flags == '':
-    py_flags = 0
-  elif flags == 'i':
-    py_flags = re.I
-  else:
-    raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
+  count = 1
+  py_flags = 0
+  for flag in flags:
+    if flag == 'i':
+      py_flags |= re.I
+    elif flag == 'g':
+      count = 0
+    else:
+      raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
 
   replacement = re.sub(_re_backref_all, r'\\g<0>', replacement)
   replacement = re.sub(_re_backref, r'\\g<\1>', replacement)
 
-  return re.sub(pattern, replacement, string)
+  # TODO: flags is only in Python 2.7
+  return re.sub(pattern, replacement, string, count=count)
+  #return re.sub(pattern, replacement, string, count=count, flags=py_flags)
