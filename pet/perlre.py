@@ -96,7 +96,7 @@ def apply_perlre(regexp, string):
   else:
     raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
 
-  replacement = re.sub(_re_backref_all, r'\g<0>', replacement)
-  replacement = re.sub(_re_backref, r'\\\1', replacement)
+  replacement = re.sub(_re_backref_all, r'\\g<0>', replacement)
+  replacement = re.sub(_re_backref, r'\\g<\1>', replacement)
 
   return re.sub(pattern, replacement, string)
