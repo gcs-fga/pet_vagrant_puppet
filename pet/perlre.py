@@ -32,7 +32,7 @@ import re
 _re_op = re.compile(r'^(s|tr|y)(.*)$')
 _markers = { '{': '}', '(': ')', '[': ']' }
 _re_backref_all = re.compile(r'\$&')
-_re_backref = re.compile(r'\$(\d)')
+_re_backref = re.compile(r'\$\{?(\d)\}?')
 
 class RegexpError(Exception):
   pass
