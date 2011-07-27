@@ -6,6 +6,7 @@ postgresql-9.0-debversion
 python-argparse
 python-debian
 python-debianbts
+python-inotifyx
 python-psycopg2
 python-pyramid
 python-sqlalchemy
