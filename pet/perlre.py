@@ -58,6 +58,11 @@ _replacement_rules = [
 class RegexpError(Exception):
   pass
 
+def compile(pattern):
+  for regex, sub in _pattern_rules:
+    pattern = regex.sub(sub, pattern)
+  return re.compile(pattern)
+
 def apply_perlre(regexp, string):
   regexp = regexp.strip()
   if regexp == "":

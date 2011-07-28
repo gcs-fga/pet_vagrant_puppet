@@ -13,6 +13,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.perlre import RegexpError, apply_perlre
+import pet.perlre
 import re
 import urllib2
 from StringIO import StringIO
@@ -92,7 +93,7 @@ class WatchRule(object):
     pattern = r'\A{0}\Z'.format(pattern)
     self.options = options
     self.homepage = homepage
-    self.pattern = re.compile(pattern)
+    self.pattern = perlre.compile(pattern)
     self.version = version
     self.action = action
   def _mangle(self, regexpes, string):
