@@ -1,4 +1,4 @@
-# (C) 2011, Ansgar Burchardt <ansgar@debian.org>
+# Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Released under the same terms as the original software, see below.
 #
