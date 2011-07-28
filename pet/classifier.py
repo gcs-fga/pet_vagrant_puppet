@@ -146,10 +146,16 @@ class Classifier(object):
         cls = 'rc_bugs'
       elif p.missing_tag:
         cls = 'missing_tag'
+      elif not p.tags:
+        cls = 'new'
       elif p.newer_upstream:
         cls = 'new_upstream'
       elif p.watch_problem:
         cls = 'watch_problem'
+      elif p.bugs:
+        cls = 'bugs'
+      elif not p.is_tagged:
+        cls = 'wip'
       else:
         cls = 'other'
       classified.setdefault(cls, []).append(p)
@@ -161,5 +167,8 @@ class Classifier(object):
       { 'name': "Missing tags", 'key': 'missing_tag' },
       { 'name': "Newer upstream version", 'key': 'new_upstream' },
       { 'name': 'Problems with debian/watch', 'key': 'watch_problem' },
-      { 'name': "Other packages", 'key': 'other' },
+      { 'name': 'New packages', 'key': 'new' },
+      { 'name': 'With bugs', 'key': 'bugs' },
+      { 'name': 'Work in progress', 'key': 'wip' },
+      #{ 'name': "Other packages", 'key': 'other' },
       ]
