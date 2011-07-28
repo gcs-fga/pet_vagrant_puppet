@@ -31,8 +31,29 @@ import re
 
 _re_op = re.compile(r'^(s|tr|y)(.*)$')
 _markers = { '{': '}', '(': ')', '[': ']' }
-_re_backref_all = re.compile(r'\$&')
-_re_backref = re.compile(r'\$\{?(\d)\}?')
+
+_pattern_rules = [
+  # POSIX character classes
+  (re.compile(r'\[:alpha:\]'), r'A-Za-z'),
+  (re.compile(r'\[:alnum:\]'), r'A-Za-z0-9'),
+    # missing: [:ascii:]
+  (re.compile(r'\[:blank:\]'), r' \t'),
+    # missing: [:cntrl:]
+  (re.compile(r'\[:digit:\]'), r'\d'),
+    # missing: [:graph:]
+  (re.compile(r'\[:lower:\]'), r'a-z'),
+    # missing: [:print:], [:punct:]
+  (re.compile(r'\[:space:\]'), r'\s'), # missing: + vertical tab
+  (re.compile(r'\[:upper:\]'), r'A-Z'),
+  (re.compile(r'\[:word:\]'), r'\w'),
+  (re.compile(r'\[:xdigit:\]'), r'0-9a-fA-F'),
+]
+
+_replacement_rules = [
+  # backrefs
+  (re.compile(r'\$&'), r'\\g<0>'),
+  (re.compile(r'\$\{?(\d)\}?'), r'\\g<\1>'),
+]
 
 class RegexpError(Exception):
   pass
@@ -103,8 +124,10 @@ def apply_perlre(regexp, string):
     else:
       raise RegexpError("Unknown flag '{0}' used in regular expression.".format(flags))
 
-  replacement = re.sub(_re_backref_all, r'\\g<0>', replacement)
-  replacement = re.sub(_re_backref, r'\\g<\1>', replacement)
+  for regex, sub in _pattern_rules:
+    pattern = regex.sub(sub, pattern)
+  for regex, sub in _replacement_rules:
+    replacement = regex.sub(sub, replacement)
 
   # TODO: flags is only in Python 2.7
   return re.sub(pattern, replacement, string, count=count)
