@@ -93,7 +93,7 @@ class WatchRule(object):
     pattern = r'\A{0}\Z'.format(pattern)
     self.options = options
     self.homepage = homepage
-    self.pattern = perlre.compile(pattern)
+    self.pattern = pet.perlre.compile(pattern)
     self.version = version
     self.action = action
   def _mangle(self, regexpes, string):
