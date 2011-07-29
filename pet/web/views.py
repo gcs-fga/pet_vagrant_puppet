@@ -62,12 +62,13 @@ def changelog(request):
   changelog = debian.changelog.Changelog(changelog_contents, max_blocks=1, strict=False)
   return { "changelog": str(changelog).strip() }
 
-@view_config(route_name='notify', request_method='POST')
+@view_config(route_name='notify')#, request_method='POST')
 def notify(request):
   path = request.session.query(Config.value).filter_by(key='request_directory').scalar() or '/srv/pet.debian.net/requests'
-  repo = request.params['repository']
-  if not re.match(r'\A[A-Za-z0-9]+\Z', repo):
-    raise HTTPBadRequest('Invalid repository name.')
-  with open(os.path.join(path, 'update-{0}'.format(repo)), 'w') as fh:
+  repo_name = request.params['repository']
+  repo_id = request.session.query(Repository.id).join(Repository.team) \
+      .filter(Repository.name == request.params['repository']) \
+      .filter(Team.name == request.matchdict['team_name']).scalar()
+  with open(os.path.join(path, 'update-{0}'.format(repo_id)), 'w') as fh:
     print >>fh, 'requested-by: {0}'.format(request.remote_addr)
   return Response('Ok.')

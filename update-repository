@@ -29,8 +29,8 @@ options = parser.parse_args(sys.argv[1:])
 session = Session()
 
 try:
-  for repo_name in options.repositories:
-    repos = session.query(Repository).filter_by(name=repo_name).all()
+  for repo_id in options.repositories:
+    repos = session.query(Repository).filter_by(id=repo_id).all()
     for r in repos:
       print "I: Updating repository {0}".format(r.name)
       ru = pet.update.RepositoryUpdater(r, force=options.force)
