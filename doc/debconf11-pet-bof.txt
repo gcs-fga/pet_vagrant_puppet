@@ -1,0 +1,83 @@
+Package Entropy Tracker
+--------------------------
+
+Current version:
+  git://git.debian.org/pet/pet3.git
+  #pet-devel, pet-devel@lists.alioth.debian.org
+
+  +-------------------------+
+  | HELP IS ALWAYS WELCOME! |
+  +-------------------------+
+
+  http://pet.debian.net/pkg-perl/pet.cgi
+
+  written in Python using PostgreSQL
+
+  supports Git and Subversion
+
+Current users:
+  PET3: pkg-perl
+  PET2: pkg-games, pkg-haskell, pkg-multimedia, pkg-ruby-extras
+  PET1: debian-med, pkg-java, python-apps, debian-edu, pkg-voip python-modules (wagner), more on http://pet.alioth.debian.org/ (probably terribly outdated)
+
+  All should be switched to PET3 in the near feature (needs some more code changes).
+
+Ideas for the future:
+ - Support other SVN layout (package/{trunk,branches,tags})
+ - Show bug reports from Ubuntu (optionally)
+ - Track package status in stable
+ - Move PET to Alioth
+   - Track package status via projectb?
+ - Import repository information into UDD (lucas, tille (for blends overview))
+ - RSS feeds (for different categories/parameters; ready-for-upload and RC buggy being the most interesting ones)
+ - Add support for darcs (for pkg-haskell)
+ - IRC/Mail reminders
+
+Distribution-wide PET?
+- needs commit hooks (for interested teams)
+- or cronned and finding repo info from Vcs-* header
+
+Current database schema:
+
+ Schema |     Name      | Type  | Owner
+--------+---------------+-------+-------
+ public | archive       | table | pet list of archives (e.g. ftp.debian.org)
+ public | bug           | table | pet
+ public | bug_source    | table | pet
+ public | bug_tracker   | table | pet
+ public | config        | table | pet
+ public | file          | table | pet
+--> public | named_tree    | table | pet has information on every branch/tag/trunk
+ public | package       | table | pet
+ public | patch         | table | pet
+ public | repository    | table | pet
+ public | suite         | table | pet
+ public | suite_binary  | table | pet
+ public | suite_package | table | pet
+ public | team          | table | pet
+ public | wait          | table | pet
+ public | watch_result  | table | pet
+
+
+
+
+
+
+
+
+License for this file:
+
+Copyright 2011, Ansgar Burchardt
+[ add other names here ]
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
