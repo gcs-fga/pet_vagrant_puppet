@@ -18,13 +18,22 @@ from pet.models import *
 from pet.vcs import vcs_backend
 import pet.update
 
-import sys
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description='check watch files')
+parser.add_argument('packages', nargs='+')
+
+options = parser.parse_args()
 
 session = Session()
 wu = pet.update.WatchUpdater(session)
 
 try:
-  wu.run()
+  if options.packages is not None:
+    named_trees = session.query(NamedTree).join(NamedTree.package).filter(Package.name.in_(options.packages))
+    wu.run(named_trees)
+  else:
+    wu.run()
   session.commit()
 except KeyboardInterrupt:
   print "E: Interrupted."

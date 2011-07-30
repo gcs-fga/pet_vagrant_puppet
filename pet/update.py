@@ -363,10 +363,12 @@ class WatchUpdater(object):
       error = ", ".join([ str(e) for e in result['errors'] ])
       wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], error=error)
     self.session.add(wr)
-  def run(self):
+  def run(self, named_trees=None):
     self.session.begin_nested()
     try:
-      named_trees = self.session.query(NamedTree).filter_by(type='branch', name=None)
+      if named_trees is None:
+        named_trees = self.session.query(NamedTree)
+      named_trees = named_trees.filter((NamedTree.type=='branch') & (NamedTree.name == None))
       watches = self.session.query(File) \
           .filter(File.name == 'debian/watch') \
           .filter(File.named_tree_id.in_(named_trees.from_self(NamedTree.id).subquery())) \
