@@ -178,7 +178,7 @@ class Watcher(object):
       errors = None
     if len(results) == 0:
       if errors is None:
-        errors = [NotFound()]
+        errors = [NotFound("NotFound")]
       if len(watch.rules):
         homepage = watch.rules[0].homepage
       else:
@@ -211,18 +211,18 @@ class Watcher(object):
             try:
               version = Version(v)
             except ValueError:
-              raise InvalidVersion()
+              raise InvalidVersion("InvalidVersion")
             results.append((url, version, rule.dversionmangle, rule.homepage))
         try:
           results.sort(key=lambda x: x[1], reverse=True)
         except ValueError:
-          raise InvalidVersion()
+          raise InvalidVersion("InvalidVersion")
     except urllib2.HTTPError as e:
       if e.code == 404:
         raise NotFound()
-      raise DownloadError()
+      raise DownloadError("HomepageNotFound")
     except urllib2.URLError:
-      raise DownloadError()
+      raise DownloadError("DownloadError")
 
     if len(results) > 0:
       return results[0]
@@ -260,7 +260,7 @@ class CPAN(object):
         try:
           version = Version(v)
         except ValueError:
-          raise InvalidVersion()
+          raise InvalidVersion("InvalidVersion")
         results.append((url, version, dversionmangle, homepage))
     results.sort(key=lambda x: x[1], reverse=True)
     return results
