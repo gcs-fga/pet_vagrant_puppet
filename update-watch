@@ -21,7 +21,7 @@ import pet.update
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description='check watch files')
-parser.add_argument('packages', nargs='+')
+parser.add_argument('packages', nargs='*')
 
 options = parser.parse_args()
 
@@ -29,7 +29,7 @@ session = Session()
 wu = pet.update.WatchUpdater(session)
 
 try:
-  if options.packages is not None:
+  if options.packages:
     named_trees = session.query(NamedTree).join(NamedTree.package).filter(Package.name.in_(options.packages))
     wu.run(named_trees)
   else:
