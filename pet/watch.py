@@ -33,6 +33,9 @@ class NotFound(WatchException):
 class DownloadError(WatchException):
   pass
 
+class InvalidVersion(WatchException):
+  pass
+
 _re_upstream_version = re.compile(r'^(?:\d+:)?(.*?)(?:-[a-zA-Z0-9+.~]*)?$')
 
 _re_version = re.compile(r'^version=(\d+)')
@@ -204,9 +207,16 @@ class Watcher(object):
           match = rule.pattern.search(link)
           if match:
             url = urljoin(homepage, link)
-            version = rule.uversionmangle(".".join(match.groups()))
-            results.append((url, Version(version), rule.dversionmangle, rule.homepage))
-        results.sort(key=lambda x: x[1], reverse=True)
+            v = rule.uversionmangle(".".join(match.groups()))
+            try:
+              version = Version(v)
+            except ValueError:
+              raise InvalidVersion()
+            results.append((url, version, rule.dversionmangle, rule.homepage))
+        try:
+          results.sort(key=lambda x: x[1], reverse=True)
+        except ValueError:
+          raise InvalidVersion()
     except urllib2.HTTPError as e:
       if e.code == 404:
         raise NotFound()
@@ -246,8 +256,12 @@ class CPAN(object):
       match = pattern.match(candidate)
       if match:
         url = urljoin(self.mirror, candidate)
-        version = uversionmangle(".".join(match.groups()))
-        results.append((url, Version(version), dversionmangle, homepage))
+        v = uversionmangle(".".join(match.groups()))
+        try:
+          version = Version(v)
+        except ValueError:
+          raise InvalidVersion()
+        results.append((url, version, dversionmangle, homepage))
     results.sort(key=lambda x: x[1], reverse=True)
     return results
 
