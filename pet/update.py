@@ -47,7 +47,7 @@ class NamedTreeUpdater(object):
       try:
         contents = unicode(contents, 'utf-8')
       except UnicodeDecodeError:
-        contents = unicode(contents, 'usi-8859-1')
+        contents = unicode(contents, 'iso-8859-1')
     return contents
   def file(self, filename):
     """
