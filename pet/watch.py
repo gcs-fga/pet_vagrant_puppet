@@ -57,12 +57,17 @@ class WatchRule(object):
       rule = match.group(3)
       opts = match.group(1) or match.group(2)
       for kv in opts.split(","):
-        key, value = kv.split("=", 1)
-        match = _re_mangle.search(key)
-        if match:
-          options[key] = value.split(';')
+        if kv == 'pasv' or kv == 'passive':
+          options['passive'] = True
+        elif kv == 'active':
+          options['active'] = True
         else:
-          options[key] = value
+          key, value = kv.split("=", 1)
+          match = _re_mangle.search(key)
+          if match:
+            options[key] = value.split(';')
+          else:
+            options[key] = value
 
     fields = rule.split(None, 3)
 
