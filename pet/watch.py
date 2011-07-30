@@ -191,6 +191,9 @@ class Watcher(object):
       if results is None:
         results = []
         homepage = _re_sf.sub('http://qa.debian.org/watch/sf.php/', rule.homepage)
+        fh = urllib2.urlopen(homepage)
+        contents = fh.read()
+        fh.close()
         if _re_http.match(homepage):
           # join all groups, only one in non-empty and contains the link
           links = [ "".join(l) for l in _re_href.findall(contents) ]
