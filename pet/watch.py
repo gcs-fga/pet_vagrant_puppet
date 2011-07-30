@@ -219,8 +219,8 @@ class Watcher(object):
           raise InvalidVersion("InvalidVersion")
     except urllib2.HTTPError as e:
       if e.code == 404:
-        raise NotFound()
-      raise DownloadError("HomepageNotFound")
+        raise NotFound("HomepageNotFound")
+      raise DownloadError("DownloadError")
     except urllib2.URLError:
       raise DownloadError("DownloadError")
 
