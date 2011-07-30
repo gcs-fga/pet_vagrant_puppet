@@ -60,7 +60,7 @@ def changelog(request):
     raise HTTPNotFound()
 
   changelog = debian.changelog.Changelog(changelog_contents, max_blocks=1, strict=False)
-  return { "changelog": str(changelog).strip() }
+  return { "changelog": unicode(changelog).strip() }
 
 @view_config(route_name='notify')#, request_method='POST')
 def notify(request):
