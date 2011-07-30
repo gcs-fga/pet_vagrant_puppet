@@ -30,6 +30,9 @@ class InvalidWatchFile(WatchException):
 class NotFound(WatchException):
   pass
 
+class DownloadError(WatchException):
+  pass
+
 _re_upstream_version = re.compile(r'^(?:\d+:)?(.*?)(?:-[a-zA-Z0-9+.~]*)?$')
 
 _re_version = re.compile(r'^version=(\d+)')
@@ -172,7 +175,7 @@ class Watcher(object):
       errors = None
     if len(results) == 0:
       if errors is None:
-        errors = ["NotFound"]
+        errors = [NotFound()]
       if len(watch.rules):
         homepage = watch.rules[0].homepage
       else:
@@ -188,9 +191,6 @@ class Watcher(object):
       if results is None:
         results = []
         homepage = _re_sf.sub('http://qa.debian.org/watch/sf.php/', rule.homepage)
-        fh = urllib2.urlopen(homepage)
-        contents = fh.read()
-        fh.close()
         if _re_http.match(homepage):
           # join all groups, only one in non-empty and contains the link
           links = [ "".join(l) for l in _re_href.findall(contents) ]
@@ -207,6 +207,9 @@ class Watcher(object):
     except urllib2.HTTPError as e:
       if e.code == 404:
         raise NotFound()
+      raise DownloadError()
+    except urllib2.URLError:
+      raise DownloadError()
 
     if len(results) > 0:
       return results[0]

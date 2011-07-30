@@ -360,7 +360,8 @@ class WatchUpdater(object):
     if result['errors'] is None:
       wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], upstream_version=str(result['version']), download_url=result['url'], debian_version=result['dversionmangle'](watch.named_tree.version))
     else:
-      wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], error=", ".join(result['errors']))
+      error = ", ".join([ str(e) for e in result['errors'] ])
+      wr = WatchResult(named_tree=watch.named_tree, homepage=result['homepage'], error=error)
     self.session.add(wr)
   def run(self):
     self.session.begin_nested()
