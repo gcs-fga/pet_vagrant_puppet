@@ -96,7 +96,7 @@ class ClassifiedPackage(object):
   @property
   def watch_problem(self):
     if self.watch:
-      if self.watch.error:
+      if self.watch.error is not None:
         return True
       if version_compare(self.watch.upstream_version, self.watch.debian_version) < 0:
         return True
