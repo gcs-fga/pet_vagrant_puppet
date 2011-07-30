@@ -163,7 +163,10 @@ class Watcher(object):
   def __init__(self):
     self._cpan = CPAN()
   def check(self, watch_file):
-    watch = WatchFile(watch_file)
+    try:
+      watch = WatchFile(watch_file)
+    except InvalidWatchFile as e:
+      return dict(errors=[e])
     results = []
     errors = []
     for rule in watch.rules:
