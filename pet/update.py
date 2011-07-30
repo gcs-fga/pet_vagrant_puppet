@@ -37,11 +37,18 @@ class NamedTreeUpdater(object):
     or None if the file does not exist
     """
     if self.named_tree.type == 'tag':
-      return self.vcs.file(self.package.name, filename, tag=self.named_tree.name)
+      contents = self.vcs.file(self.package.name, filename, tag=self.named_tree.name)
     elif self.named_tree.type == 'branch':
-      return self.vcs.file(self.package.name, filename, branch=self.named_tree.name)
+      contents = self.vcs.file(self.package.name, filename, branch=self.named_tree.name)
     else:
       raise ValueError("unknown NamedTree type '{0}'".format(self.named_tree.type))
+
+    if contents is not None:
+      try:
+        contents = unicode(contents, 'utf-8')
+      except UnicodeDecodeError:
+        contents = unicode(contents, 'usi-8859-1')
+    return contents
   def file(self, filename):
     """
     returns (file, changed)
