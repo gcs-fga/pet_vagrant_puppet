@@ -172,6 +172,8 @@ class Watcher(object):
       watch = WatchFile(watch_file)
     except InvalidWatchFile as e:
       return dict(errors=[e])
+    except RegexpError:
+      return dict(errors=["RegexpError"])
     results = []
     errors = []
     for rule in watch.rules:
@@ -231,6 +233,8 @@ class Watcher(object):
       raise DownloadError("DownloadError")
     except urllib2.URLError:
       raise DownloadError("DownloadError")
+    except RegexpError:
+      raise InvalidWatchFile("RegexpError")
 
     if len(results) > 0:
       return results[0]
