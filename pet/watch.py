@@ -16,6 +16,7 @@ from pet.perlre import RegexpError, apply_perlre
 import pet.perlre
 import re
 import urllib2
+import httplib
 from StringIO import StringIO
 import gzip
 from urlparse import urljoin
@@ -231,7 +232,7 @@ class Watcher(object):
       if e.code == 404:
         raise NotFound("HomepageNotFound")
       raise DownloadError("DownloadError")
-    except urllib2.URLError:
+    except (urllib2.URLError, httplib.HTTPException):
       raise DownloadError("DownloadError")
     except RegexpError:
       raise InvalidWatchFile("RegexpError")
