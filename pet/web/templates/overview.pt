@@ -53,6 +53,14 @@
 	      <tr tal:repeat="b p.bugs">
 		<td>
 		  <a class="bts-${b.severity}" href="http://bugs.debian.org/${b.bug_number}">#${b.bug_number}</a>
+		  <div tal:condition="b.forwarded" class="bts-forwarded">
+		      <a tal:attributes="href b.forwarded" href="http://rt.cpan.org/">forwarded</a>
+		  </div>
+		  <div tal:condition="b.tags" class="bts-keywords">
+		      <span tal:repeat="tag b.tags" tal:omit-tag="1">
+			  <span tal:replace="tag">tag</span><span tal:omit-tag="1" tal:condition="not repeat.tag.end">, </span>
+		      </span>
+		  </div>
 		</td>
 		<td tal:content="b.subject">It doesn't work!</td>
 	      </tr>
