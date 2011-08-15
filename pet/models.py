@@ -50,6 +50,12 @@ class Team(Base):
 class Repository(Base):
   __tablename__ = 'repository'
   team = relation('Team', backref='repositories')
+  @property
+  def vcs(self):
+    if '_vcs' not in self.__dict__:
+      from pet.vcs import vcs_backend
+      self._vcs = vcs_backend(self)
+    return self._vcs
 
 class Package(Base):
   __tablename__ = 'package'
@@ -80,6 +86,8 @@ class NamedTree(Base):
     return self._file(filename).count() != 0
   def file(self, filename):
     return self._file(filename).one()
+  def link(self, filename, directory=False):
+    return self.package.repository.vcs.link(self.package.name, filename, directory, named_tree=self)
 
 class WatchResult(Base):
   __tablename__ = 'watch_result'

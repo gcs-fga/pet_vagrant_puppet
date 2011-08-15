@@ -106,7 +106,7 @@ class Classifier(object):
   def __init__(self, session, named_trees, suite_condition, bug_tracker_condition):
     self.session = session
     sorted_named_trees = named_trees.join(NamedTree.package) \
-        .options(joinedload(NamedTree.watch_result)) \
+        .options(joinedload(NamedTree.watch_result, Package.repository)) \
         .order_by(Package.name, Package.repository_id, Package.id)
 
     bug_sources = session.query(BugSource) \

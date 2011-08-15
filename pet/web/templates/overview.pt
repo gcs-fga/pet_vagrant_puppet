@@ -29,13 +29,13 @@
 	<td tal:attributes="class p.ready_for_upload and 'todo'">
 	  <!-- repository status -->
 	  <span tal:condition="p.highest_tag" class="popup repo-rel">
-	    <a tal:content="p.highest_tag.version" tal:attributes="href view.changelog_url(p.highest_tag)">0.1-1</a>
+	    <a tal:content="p.highest_tag.version" tal:attributes="href p.highest_tag.link('debian/changelog')">0.1-1</a>
 	    <span id="${p.highest_tag.id}_rel_chlog_balloon" class="balloon">
 	      <a href="javascript:async_get('${p.highest_tag.id}_rel_chlog_balloon', '${view.changelog_url(p.highest_tag)}')">${p.highest_tag.last_changed_by} &mdash; ${p.highest_tag.last_changed}</a>
 	    </span>
 	  </span>
 	  <span tal:condition="not p.is_tagged" class="popup repo-unrel">
-	    <a tal:attributes="href view.changelog_url(p.named_tree)">(${p.version})</a>
+	    <a tal:attributes="href p.named_tree.link('debian/changelog')">(${p.version})</a>
 	    <span id="${p.named_tree.id}_rel_chlog_balloon" class="balloon">
 	      <a href="javascript:async_get('${p.named_tree.id}_rel_chlog_balloon', '${view.changelog_url(p.named_tree)}')">${p.last_changed_by} &mdash; ${p.last_changed}</a>
 	    </span>

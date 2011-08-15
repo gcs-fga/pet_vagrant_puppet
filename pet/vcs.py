@@ -55,7 +55,15 @@ class Subversion(VCS):
     self.ra = svn.ra.svn_ra_open2(self.root, self.callbacks, None)
     self.rev = svn.ra.svn_ra_get_latest_revnum(self.ra)
     self._cache = dict()
-  def link(self, package, filename, directory=False, branch=None, tag=None):
+  def link(self, package, filename, directory=False, branch=None, tag=None, named_tree=None):
+    assert not (named_tree and (branch or tag)), "cannot give both named_tree and branch or tag"
+    if named_tree is not None:
+      if named_tree.type == 'branch':
+        branch = named_tree.name
+      elif named_tree.type == 'tag':
+        tag = named_tree.name
+      else:
+        raise ValueError('NamedTree is neither branch nor tag')
     assert not (branch and tag), "cannot give both branch and tag"
     if branch:
       prefix = "branches/{0}".format(branch)
@@ -212,7 +220,15 @@ class Git(VCS):
     self.root = repository.root
     self.web_root = repository.web_root
     self._summary_cache = None
-  def link(self, package, filename=None, directory=False, branch=None, tag=None):
+  def link(self, package, filename=None, directory=False, branch=None, tag=None, named_tree=None):
+    assert not (named_tree and (branch or tag)), "cannot give both named_tree and branch or tag"
+    if named_tree is not None:
+      if named_tree.type == 'branch':
+        branch = named_tree.name
+      elif named_tree.type == 'tag':
+        tag = named_tree.name
+      else:
+        raise ValueError('NamedTree is neither branch nor tag')
     assert not (branch and tag), "cannot give both branch and tag"
     if filename is not None and not directory:
       url = "/{0}.git;a=blob;f={1}".format(urllib.quote(package), urllib.quote(filename))
