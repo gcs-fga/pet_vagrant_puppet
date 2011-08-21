@@ -128,6 +128,10 @@ class DebianBugTracker(object):
   def __init__(self, binary_source_map, ignore_unknown_binaries=False):
     self.binary_source_map = binary_source_map
     self.ignore_unknown_binaries = ignore_unknown_binaries
-  def search(self, sources):
-    bug_numbers = debianbts.get_bugs('src', sources)
-    return [ _DebianBugReport(b, self.binary_source_map, self.ignore_unknown_binaries) for b in debianbts.get_status(bug_numbers) ]
+  def search(self, sources, bug_numbers=None):
+    if bug_numbers is None:
+      bug_numbers = set()
+    else:
+      bug_numbers = set(bug_numbers)
+    bug_numbers.update(debianbts.get_bugs('src', sources))
+    return [ _DebianBugReport(b, self.binary_source_map, self.ignore_unknown_binaries) for b in debianbts.get_status(list(bug_numbers)) ]

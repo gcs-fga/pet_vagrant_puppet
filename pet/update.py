@@ -341,7 +341,8 @@ class BugTrackerUpdater(object):
     if named_trees is None:
       sources = [ s[0] for s in self.session.query(NamedTree.source).distinct() ]
       self._delete_unreferenced_bugs(sources)
-      bug_reports = bts.search(sources)
+      bug_numbers = [ b[0] for b in self.session.query(Bug.bug_number).filter_by(bug_tracker=self.bug_tracker).all() ]
+      bug_reports = bts.search(sources, bug_numbers)
       self._update_bugs(bug_reports)
     else:
       sources = list(set([ nt.source for nt in named_trees ]))
