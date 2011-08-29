@@ -18,12 +18,15 @@ from pet.bts import DebianBugTracker
 from pet.watch import Watcher
 from debian import deb822
 from debian.changelog import Changelog
+import re
 import shutil
 import tempfile
 import os.path
 import subprocess
 import sqlalchemy.orm.exc
 from sqlalchemy.orm import joinedload
+
+re_ignore = re.compile("IGNORE[ -]VERSION:?\s*(?P<version>\S+)", re.IGNORECASE)
 
 class NamedTreeUpdater(object):
   def delete_old_files(self):
@@ -102,6 +105,8 @@ class NamedTreeUpdater(object):
     changelog_file, changed = self.file("debian/changelog")
     if not changed and not self.force: return
     nt = self.named_tree
+    nt.ignore = False
+
     if changelog_file.contents:
       changelog = Changelog(changelog_file.contents, strict=False)
       nt.source_changelog = changelog.package
@@ -111,6 +116,12 @@ class NamedTreeUpdater(object):
       nt.urgency = changelog.urgency
       nt.last_changed = changelog.date
       nt.last_changed_by = changelog.author
+
+      # TODO: Use public API once #634849 is fixed.
+      for line in changelog._blocks[0].changes():
+        match = re_ignore.search(line)
+        if match and match.group('version') == nt.version:
+          nt.ignore = True
     else:
       nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
       nt.versions = []
