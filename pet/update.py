@@ -89,8 +89,11 @@ class NamedTreeUpdater(object):
     nt = self.named_tree
     if control_file.contents:
       control = deb822.Deb822(control_file.contents)
-      nt.source = control["Source"]
-      nt.maintainer = control["Maintainer"].strip()
+      nt.source = control.get("Source")
+      if "Maintainer" in control:
+        nt.maintainer = control["Maintainer"].strip()
+      else:
+        nt.maintainer = None
       if "Uploaders" in control:
         nt.uploaders = [ u.strip() for u in control["Uploaders"].split(",") ]
       else:
