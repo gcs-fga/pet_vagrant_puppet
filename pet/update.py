@@ -27,6 +27,13 @@ import sqlalchemy.orm.exc
 from sqlalchemy.orm import joinedload
 
 re_ignore = re.compile("IGNORE[ -]VERSION:?\s*(?P<version>\S+)", re.IGNORECASE)
+re_waits_for = re.compile(r"""
+  WAITS[ -]FOR:?\s*
+  (?P<package>\S+)                           # package name
+  (?:
+    \s+(:?\([<=>]*\s*)?(?P<version>\S+?)\)? # optional version number
+    (?:\s+(?P<comment>.*))?                  # and comment
+  )$""", re.IGNORECASE | re.VERBOSE)
 
 class NamedTreeUpdater(object):
   """update a `pet.models.NamedTree`"""
@@ -111,6 +118,7 @@ class NamedTreeUpdater(object):
     if not changed and not self.force: return
     nt = self.named_tree
     nt.ignore = False
+    self.session.query(Wait).filter_by(named_tree=self.named_tree).delete()
 
     if changelog_file.contents:
       changelog = Changelog(changelog_file.contents, strict=False)
@@ -127,6 +135,11 @@ class NamedTreeUpdater(object):
         match = re_ignore.search(line)
         if match and match.group('version') == nt.version:
           nt.ignore = True
+
+        match = re_waits_for.search(line)
+        if match:
+          wait = Wait(named_tree=self.named_tree, name=match.group('package'), version=match.group('version'), comment=match.group('comment'))
+          self.session.add(wait)
     else:
       nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
       nt.versions = []
