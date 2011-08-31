@@ -29,11 +29,11 @@ from sqlalchemy.orm import joinedload
 re_ignore = re.compile("IGNORE[ -]VERSION:?\s*(?P<version>\S+)", re.IGNORECASE)
 re_waits_for = re.compile(r"""
   WAITS[ -]FOR:?\s*
-  (?P<package>\S+)                           # package name
+  (?P<package>\S*)                           # package name
   (?:
-    \s+(:?\([<=>]*\s*)?(?P<version>\S+?)\)? # optional version number
+    \s+(:?\([<=>]*\s*)?(?P<version>\S+?)\)?  # optional version number
     (?:\s+(?P<comment>.*))?                  # and comment
-  )$""", re.IGNORECASE | re.VERBOSE)
+  )?$""", re.IGNORECASE | re.VERBOSE)
 
 class NamedTreeUpdater(object):
   """update a `pet.models.NamedTree`"""
