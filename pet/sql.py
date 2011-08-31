@@ -345,3 +345,12 @@ DBUpdater().add(13, statements=[
     CHECK (error IS NOT NULL != (upstream_version IS NOT NULL AND download_url IS NOT NULL AND debian_version IS NOT NULL))
   )""",
   ])
+
+DBUpdater().add(14, statements=[
+  """
+  ALTER TABLE wait
+    DROP CONSTRAINT wait_pkey,
+    ALTER COLUMN version DROP NOT NULL,
+    ADD COLUMN id SERIAL PRIMARY KEY
+  """,
+  ])
