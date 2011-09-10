@@ -34,6 +34,7 @@ re_waits_for = re.compile(r"""
     \s+(:?\([<=>]*\s*)?(?P<version>\S+?)\)?  # optional version number
     (?:\s+(?P<comment>.*))?                  # and comment
   )?$""", re.IGNORECASE | re.VERBOSE)
+re_todo = re.compile(r"\A\s*(?:\* )?(?:TODO|PROBLEM|QUESTION):")
 
 class NamedTreeUpdater(object):
   """update a `pet.models.NamedTree`"""
@@ -117,7 +118,7 @@ class NamedTreeUpdater(object):
     changelog_file, changed = self.file("debian/changelog")
     if not changed and not self.force: return
     nt = self.named_tree
-    nt.ignore = False
+    nt.ignore = nt.todo = False
     self.session.query(Wait).filter_by(named_tree=self.named_tree).delete()
 
     if changelog_file.contents:
@@ -140,6 +141,9 @@ class NamedTreeUpdater(object):
         if match:
           wait = Wait(named_tree=self.named_tree, name=match.group('package'), version=match.group('version'), comment=match.group('comment'))
           self.session.add(wait)
+
+        if re_todo.search(line):
+          nt.todo = True
     else:
       nt.source_changelog = nt.version = nt.distribution = nt.urgency = nt.last_changed = nt.last_changed_by = None
       nt.versions = []

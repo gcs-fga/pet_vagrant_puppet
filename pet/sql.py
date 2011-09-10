@@ -354,3 +354,10 @@ DBUpdater().add(14, statements=[
     ADD COLUMN id SERIAL PRIMARY KEY
   """,
   ])
+
+DBUpdater().add(15, statements=[
+  """
+  ALTER TABLE named_tree
+    ADD COLUMN todo BOOLEAN NOT NULL DEFAULT 'f'
+  """,
+  ])
