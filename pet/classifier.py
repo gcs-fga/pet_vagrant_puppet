@@ -31,6 +31,7 @@ class ClassifiedPackage(object):
   distribution = property(lambda self: self.named_tree.distribution)
   last_changed_by = property(lambda self: self.named_tree.last_changed_by)
   last_changed = property(lambda self: self.named_tree.last_changed)
+  todo = property(lambda self: self.named_tree.todo)
 
   @property
   def has_rc_bugs(self):

@@ -26,7 +26,7 @@
       <tr><th>Package</th><th>Repository</th><th>Archive</th><th>Bugs</th><th>Upstream</th></tr>
       <tr tal:repeat="p classified[cl.key]">
 	<td tal:content="p.name">a-package</td>
-	<td tal:attributes="class p.ready_for_upload and 'todo'">
+	<td tal:attributes="class (p.ready_for_upload or p.todo) and 'todo'">
 	  <!-- repository status -->
 	  <span tal:condition="p.highest_tag" class="popup repo-rel">
 	    <a tal:content="p.highest_tag.version" tal:attributes="href p.highest_tag.link('debian/changelog')">0.1-1</a>
