@@ -20,7 +20,7 @@
   <table id="main_table">
 <div tal:repeat="cl classes" tal:omit-tag=""><div tal:condition="cl.key in classified" tal:omit-tag="">
     <thead>
-      <tr><th colspan="5" class="clickable"><a stype="display: block" href="javascript:toggle_visibility('${cl.key}')">${cl.name} (${len(classified[cl.key])})</a></th></tr>
+      <tr><th colspan="5" class="clickable"><a style="display: block" href="javascript:toggle_visibility('${cl.key}')">${cl.name} (${len(classified[cl.key])})</a></th></tr>
     </thead>
     <tbody tal:attributes="id cl.key">
       <tr><th>Package</th><th>Repository</th><th>Archive</th><th>Bugs</th><th>Upstream</th></tr>
