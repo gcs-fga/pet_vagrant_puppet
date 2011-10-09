@@ -150,7 +150,7 @@ class File(Base):
 class Patch(Base):
   """patches present in debian/patches/series"""
   __tablename__ = 'patch'
-  named_tree = relation('NamedTree', backref='patches')
+  named_tree = relation('NamedTree', backref=backref('patches', passive_deletes=True))
 
 class Archive(Base):
   """model for an archive"""
