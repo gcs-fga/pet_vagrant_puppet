@@ -66,18 +66,18 @@ class Subversion(VCS):
         raise ValueError('NamedTree is neither branch nor tag')
     assert not (branch and tag), "cannot give both branch and tag"
     if branch:
-      prefix = "branches/{0}".format(branch)
+      prefix = "branches/{0}/{1}".format(branch, package)
     elif tag:
-      prefix = "tags/{0}".format(tag)
+      prefix = "tags/{0}/{1}".format(package, tag)
     else:
-      prefix = "trunk"
+      prefix = "trunk/{0}".format(package)
 
     if directory:
       extra = ""
     else:
       extra = "?view=markup"
 
-    return "{0}/{1}/{2}/{3}{4}".format(self.web_root, prefix, package, filename, extra)
+    return "{0}/{1}/{2}{3}".format(self.web_root, prefix, filename, extra)
   def file(self, package, filename, branch=None, tag=None):
     """
     returns file contents
