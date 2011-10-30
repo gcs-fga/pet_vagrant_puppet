@@ -84,7 +84,7 @@ class ClassifiedPackage(object):
   @property
   def todo_bugs(self):
     for b in self.bugs:
-      if not b.forwarded and 'pending' not in b.tags and 'wontfix' not in b.tags and 'moreinfo' not in b.tags:
+      if not b.forwarded and 'fixed-upstream' not in b.tags and 'pending' not in b.tags and 'wontfix' not in b.tags and 'moreinfo' not in b.tags:
         return True
     return False
 
