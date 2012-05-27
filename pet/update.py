@@ -296,11 +296,11 @@ class SuiteUpdater(object):
     target_gz = target + ".gz"
     r = subprocess.call(['wget', '--quiet', '-O', target_gz, '--', source])
     if r:
-      raise IOError("wget failed.")
+      raise IOError("wget failed for {0}.".format(source))
     with open(target, 'w') as fh:
       r = subprocess.call(['gzip', '--decompress', '--to-stdout', '--', target_gz], stdout=fh)
       if r:
-        raise IOError("gzip failed.")
+        raise IOError("gzip failed for {0}.".format(source))
   def add_package_list(self):
     for component in self.suite.components:
       url = "{0}/dists/{1}/{2}/source/Sources.gz".format(self.archive.url, self.suite.name, component)
