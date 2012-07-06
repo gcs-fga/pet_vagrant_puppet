@@ -18,6 +18,7 @@ import StringIO
 import urllib2
 import urllib
 import json
+import time
 
 class VCSException(Exception):
   pass
@@ -264,6 +265,7 @@ class Git(VCS):
       if e.code == 404:
         return None
       raise
+    time.sleep(1)
     return contents
   @property
   def _summary(self):
