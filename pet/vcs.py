@@ -265,7 +265,7 @@ class Git(VCS):
       if e.code == 404:
         return None
       raise
-    time.sleep(1)
+    time.sleep(3)
     return contents
   @property
   def _summary(self):
