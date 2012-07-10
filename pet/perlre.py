@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Released under the same terms as the original software, see below.
