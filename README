@@ -7,6 +7,7 @@ python-argparse
 python-debian
 python-debianbts
 python-inotifyx
+python-paste
 python-psycopg2
 python-pyramid
 python-sqlalchemy
