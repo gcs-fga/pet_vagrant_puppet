@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from sqlalchemy import create_engine
+import sqlalchemy
 
 def engine():
-  return create_engine('postgresql:///pet')
+  return sqlalchemy.create_engine('postgresql:///pet')

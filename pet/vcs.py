@@ -13,14 +13,16 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from os.path import relpath
-import svn.core, svn.client, svn.ra
+from pet.exceptions import *
+
+import json
 import StringIO
+import svn.client
+import svn.core
+import svn.ra
+import time
 import urllib2
 import urllib
-import json
-import time
-from pet.exceptions import *
 
 _vcs_backends = {}
 def _vcs_backend(name):

@@ -14,15 +14,15 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.exceptions import *
-from pet.perlre import apply_perlre
 import pet.perlre
-import re
-import urllib2
-import httplib
-from StringIO import StringIO
+
+import debian.debian_support
 import gzip
-from urlparse import urljoin
-from debian.debian_support import Version
+import httplib
+import re
+import StringIO
+import urllib2
+import urlparse
 
 _re_upstream_version = re.compile(r'^(?:\d+:)?(.*?)(?:-[a-zA-Z0-9+.~]*)?$')
 
@@ -97,7 +97,7 @@ class WatchRule(object):
     self.action = action
   def _mangle(self, regexpes, string):
     for regexp in regexpes:
-      string = apply_perlre(regexp, string)
+      string = pet.perlre.apply_perlre(regexp, string)
     return string
   def uversionmangle(self, uversion):
     """returns mangled upstream version"""
@@ -204,10 +204,10 @@ class Watcher(object):
         for link in links:
           match = rule.pattern.search(link)
           if match:
-            url = urljoin(homepage, link)
+            url = urlparse.urljoin(homepage, link)
             v = rule.uversionmangle(".".join(match.groups()))
             try:
-              version = Version(v)
+              version = debian.debian_support.Version(v)
             except ValueError:
               raise InvalidVersion("InvalidVersion")
             results.append((url, version, rule.dversionmangle, rule.homepage))
@@ -239,7 +239,7 @@ class CPAN(object):
 
   def _get_and_uncompress(self, url):
     response = urllib2.urlopen(url)
-    buf = StringIO(response.read())
+    buf = StringIO.StringIO(response.read())
     response.close()
     return gzip.GzipFile(fileobj=buf, mode='rb')
 
@@ -255,10 +255,10 @@ class CPAN(object):
     for candidate in target:
       match = pattern.match(candidate)
       if match:
-        url = urljoin(self.mirror, candidate)
+        url = urlparse.urljoin(self.mirror, candidate)
         v = uversionmangle(".".join(match.groups()))
         try:
-          version = Version(v)
+          version = debian.debian_support.Version(v)
         except ValueError:
           raise InvalidVersion("InvalidVersion")
         results.append((url, version, dversionmangle, homepage))
@@ -269,7 +269,8 @@ class CPAN(object):
   def dists(self):
     if self._dists is None:
       dists = []
-      contents = self._get_and_uncompress(urljoin(self.mirror, 'modules/02packages.details.txt.gz'))
+      contents = self._get_and_uncompress(urlparse.urljoin(self.mirror,
+	      'modules/02packages.details.txt.gz'))
       for line in contents:
         fields = line.strip().split(None, 2)
         if len(fields) >= 3:
@@ -289,7 +290,8 @@ class CPAN(object):
 
       current = '' # current directory
       interesting = False # are we interested in files in the current directory?
-      contents = self._get_and_uncompress(urljoin(self.mirror, 'indices/ls-lR.gz'))
+      contents = self._get_and_uncompress(urlparse.urljoin(self.mirror,
+	      'indices/ls-lR.gz'))
       for line in contents:
         line = line.strip()
         if line == '':

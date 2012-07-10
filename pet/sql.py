@@ -19,7 +19,7 @@ SQL helper functions for database maintainance.
 
 from pet.exceptions import *
 
-from sqlalchemy.sql import text
+import sqlalchemy.sql
 
 class DBUpdate(object):
   def __init__(self, schema_version, statements=None, callable=None):
@@ -38,7 +38,10 @@ class DBUpdate(object):
           connection.execute(s)
       if self.callable:
         self.callable(connection)
-      connection.execute(text("UPDATE config SET value = :version WHERE key = 'schema_version'"), version=self.schema_version)
+      connection.execute(
+          sqlalchemy.sql.text(
+            "UPDATE config SET value = :version WHERE key = 'schema_version'"),
+          version=self.schema_version)
 
 class DBUpdater(object):
   __shared = {'updates': {}}

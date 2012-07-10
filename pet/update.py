@@ -13,19 +13,20 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from pet.exceptions import *
 from pet.models import *
-from pet.vcs import FileNotFound, vcs_backend
-from pet.bts import DebianBugTracker
-from pet.watch import Watcher
-from debian import deb822
-from debian.changelog import Changelog
-import re
-import shutil
-import tempfile
+import pet.vcs
+import pet.bts
+import pet.watch
+
+import debian
+import debian.changelog
 import os.path
-import subprocess
+import re
+import sqlalchemy.orm
 import sqlalchemy.orm.exc
-from sqlalchemy.orm import joinedload
+import subprocess
+import tempfile
 
 re_ignore = re.compile("IGNORE[ -]VERSION:?\s*(?P<version>\S+)", re.IGNORECASE)
 re_waits_for = re.compile(r"""
@@ -98,7 +99,7 @@ class NamedTreeUpdater(object):
     if not changed and not self.force: return
     nt = self.named_tree
     if control_file.contents:
-      control = deb822.Deb822(control_file.contents)
+      control = debian.deb822.Deb822(control_file.contents)
       nt.source = control.get("Source")
       if "Maintainer" in control:
         nt.maintainer = control["Maintainer"].strip()
@@ -123,7 +124,8 @@ class NamedTreeUpdater(object):
     self.session.query(Wait).filter_by(named_tree=self.named_tree).delete()
 
     if changelog_file.contents:
-      changelog = Changelog(changelog_file.contents, strict=False)
+      changelog = debian.changelog.Changelog(changelog_file.contents,
+          strict=False)
       nt.source_changelog = changelog.package
       nt.version = str(changelog.version)
       nt.versions = [ str(v) for v in changelog.versions ]
@@ -213,7 +215,7 @@ class RepositoryUpdater(object):
   def __init__(self, repository, force=False):
     self.session = Session.object_session(repository)
     self.repository = repository
-    self.vcs = vcs_backend(repository)
+    self.vcs = pet.vcs.vcs_backend(repository)
     self.force = force
   def update_package_list(self):
     self.session.begin_nested()
@@ -308,7 +310,7 @@ class SuiteUpdater(object):
       target = os.path.join(self.tmpdir, "sources-{0}-{1}-{2}".format(self.archive.id, self.suite.id, component))
       self._download(url, target)
       with open(target, 'r') as fh:
-        for s in deb822.Sources.iter_paragraphs(fh):
+        for s in debian.deb822.Sources.iter_paragraphs(fh):
           if "Uploaders" in s:
             uploaders = [ u.strip() for u in s["Uploaders"].split(",") ]
           else:
@@ -372,7 +374,7 @@ class BugTrackerUpdater(object):
 
   def run(self, named_trees=None):
     # TODO: Add binary_source_map
-    bts = DebianBugTracker({}, ignore_unknown_binaries=True)
+    bts = pet.bts.DebianBugTracker({}, ignore_unknown_binaries=True)
     # TODO: Unify code path once _delete_unreferenced_bugs is fixed
     # to no longer need the list of sources.
     if named_trees is None:
@@ -389,7 +391,7 @@ class BugTrackerUpdater(object):
 class WatchUpdater(object):
   def __init__(self, session):
     self.session = session
-    self.watcher = Watcher()
+    self.watcher = pet.watch.Watcher()
 
   def update_watch(self, watch):
     if watch.contents is None:
@@ -410,7 +412,7 @@ class WatchUpdater(object):
       watches = self.session.query(File) \
           .filter(File.name == 'debian/watch') \
           .filter(File.named_tree_id.in_(named_trees.from_self(NamedTree.id).subquery())) \
-          .options(joinedload(File.named_tree))
+          .options(sqlalchemy.orm.joinedload(File.named_tree))
       self.session.query(WatchResult) \
           .filter(WatchResult.named_tree_id.in_(named_trees.from_self(NamedTree.id).subquery())).delete(False)
       for watch in watches:

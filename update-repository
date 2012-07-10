@@ -16,13 +16,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.models import *
-from pet.vcs import vcs_backend
 import pet.update
-from argparse import ArgumentParser
 
+import argparse
 import sys
 
-parser = ArgumentParser(description='update a repository')
+parser = argparse.ArgumentParser(description='update a repository')
 parser.add_argument('-f', '--force', action='store_true', default=False)
 parser.add_argument('repositories', nargs='+')
 options = parser.parse_args(sys.argv[1:])

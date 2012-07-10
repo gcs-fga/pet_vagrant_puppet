@@ -16,7 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pet.web
-from paste.httpserver import serve
+
+import paste.httpserver
 
 app = pet.web.main()
-serve(app, host='0.0.0.0')
+paste.httpserver.serve(app, host='0.0.0.0')

@@ -16,10 +16,12 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.models import *
+
+import copy
 import inotifyx
 import os
+import os.path
 import re
-from copy import copy
 import subprocess
 
 def setup_watch(path):
@@ -31,7 +33,7 @@ def setup_watch(path):
     os.close(fd)
 
 def run_single_action(command, options):
-  real_command = copy(command)
+  real_command = copy.copy(command)
   real_command.extend(options)
   print "I: Running {0}".format(real_command)
   retcode = subprocess.call(real_command)

@@ -16,7 +16,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.models import *
-from pet.vcs import vcs_backend
 import pet.update
 
 import sys

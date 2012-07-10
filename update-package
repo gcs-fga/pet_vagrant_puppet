@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 from pet.models import *
-from pet.vcs import vcs_backend
 import pet.update
+import pet.vcs
 
 import sys
 
@@ -29,7 +29,7 @@ for package_name in sys.argv[1:]:
   packages = session.query(Package).filter_by(name=package_name).all()
   for p in packages:
     r = p.repository
-    v = vcs_backend(r)
+    v = pet.vcs.vcs_backend(r)
     print "I: Updating package {0}".format(p.name)
     pu.run(p, v)
 
