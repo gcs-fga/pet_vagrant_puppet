@@ -28,6 +28,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import re
+from pet.exceptions import *
 
 _re_op = re.compile(r'^(s|tr|y)(.*)$')
 _markers = { '{': '}', '(': ')', '[': ']' }
@@ -54,9 +55,6 @@ _replacement_rules = [
   (re.compile(r'\$&'), r'\\g<0>'),
   (re.compile(r'\$\{?(\d)\}?'), r'\\g<\1>'),
 ]
-
-class RegexpError(Exception):
-  pass
 
 def compile(pattern):
   for regex, sub in _pattern_rules:

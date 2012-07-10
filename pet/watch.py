@@ -12,7 +12,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.perlre import RegexpError, apply_perlre
+from pet.exceptions import *
+from pet.perlre import apply_perlre
 import pet.perlre
 import re
 import urllib2
@@ -21,21 +22,6 @@ from StringIO import StringIO
 import gzip
 from urlparse import urljoin
 from debian.debian_support import Version
-
-class WatchException(Exception):
-  pass
-
-class InvalidWatchFile(WatchException):
-  pass
-
-class NotFound(WatchException):
-  pass
-
-class DownloadError(WatchException):
-  pass
-
-class InvalidVersion(WatchException):
-  pass
 
 _re_upstream_version = re.compile(r'^(?:\d+:)?(.*?)(?:-[a-zA-Z0-9+.~]*)?$')
 

@@ -19,12 +19,7 @@ import urllib2
 import urllib
 import json
 import time
-
-class VCSException(Exception):
-  pass
-
-class FileNotFound(VCSException):
-  pass
+from pet.exceptions import *
 
 _vcs_backends = {}
 def _vcs_backend(name):
