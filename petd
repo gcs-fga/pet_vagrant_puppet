@@ -15,7 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
+import pet.models
 
 import copy
 import inotifyx
@@ -49,16 +49,22 @@ def run_action(actions, filename):
       action_taken = True
   return action_taken
 
-session = Session()
-path = session.query(Config.value).filter_by(key='request_directory').scalar() or '/srv/pet.debian.net/requests'
+session = pet.models.Session()
+path = (session.query(pet.models.Config.value)
+    .filter_by(key='request_directory').scalar()
+    or '/srv/pet.debian.net/requests')
 session.rollback()
 watch = setup_watch(path)
 
 actions = [
-  dict(re=re.compile('\Aupdate-([A-Za-z0-9-]+)\Z'), command=['update-repository']),
-  dict(re=re.compile('\Aarchive-([A-Za-z0-9-]+)\Z'), command=['update-archive']),
-  dict(re=re.compile('\Abts-([A-Za-z0-9-]+)\Z'), command=['update-bts']),
-  dict(re=re.compile('\Awatch\Z'), command=['update-watch']),
+  dict(re=re.compile('\Aupdate-([A-Za-z0-9-]+)\Z'),
+    command=['update-repository']),
+  dict(re=re.compile('\Aarchive-([A-Za-z0-9-]+)\Z'),
+    command=['update-archive']),
+  dict(re=re.compile('\Abts-([A-Za-z0-9-]+)\Z'),
+    command=['update-bts']),
+  dict(re=re.compile('\Awatch\Z'),
+    command=['update-watch']),
 ]
 
 while True:
