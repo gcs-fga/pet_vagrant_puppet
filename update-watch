@@ -15,29 +15,35 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
+import pet.models
 import pet.update
 
 import argparse
 
-parser = argparse.ArgumentParser(description='check watch files')
-parser.add_argument('packages', nargs='*')
+def main():
+  parser = argparse.ArgumentParser(description='check watch files')
+  parser.add_argument('packages', nargs='*')
 
-options = parser.parse_args()
+  options = parser.parse_args()
+  session = pet.models.Session()
+  updater = pet.update.WatchUpdater(session)
 
-session = Session()
-wu = pet.update.WatchUpdater(session)
+  try:
+    if options.packages:
+      named_trees = session.query(pet.models.NamedTree) \
+          .join(pet.models.NamedTree.package) \
+          .filter(pet.models.Package.name.in_(options.packages))
+      updater.run(named_trees)
+    else:
+      updater.run()
+    session.commit()
+  except KeyboardInterrupt:
+    print "E: Interrupted."
+    session.commit()
+  except:
+    session.rollback()
+    raise
 
-try:
-  if options.packages:
-    named_trees = session.query(NamedTree).join(NamedTree.package).filter(Package.name.in_(options.packages))
-    wu.run(named_trees)
-  else:
-    wu.run()
-  session.commit()
-except KeyboardInterrupt:
-  print "E: Interrupted."
-  session.commit()
-except:
-  session.rollback()
-  raise
+if __name__ == '__main__':
+  main()
+
