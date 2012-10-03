@@ -1,4 +1,4 @@
-# Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
+# Copyright 2011-2012, Ansgar Burchardt <ansgar@debian.org>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -18,6 +18,7 @@ import StringIO
 import urllib2
 import urllib
 import json
+import subprocess
 import time
 
 class VCSException(Exception):
@@ -332,3 +333,25 @@ class Git(VCS):
           trunk.commit_id = ps['trunk']
           add_changed(trunk)
     return changed
+
+@_vcs_backend("git-local")
+class GitLocal(Git):
+  def __init__(self, repository):
+    super(GitLocal, self).__init__(repository)
+  def file(self, package, filename, branch=None, tag=None):
+    assert not (branch and tag), "cannot give both branch and tag"
+    tree = branch or tag or 'HEAD'
+    cmd = ['git', 'cat-file', 'blob', '{0}:{1}'.format(tree, filename)]
+    cwd = '{0}.d/{1}.git'.format(self.root, package)
+    p = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    if p.returncode != 0:
+      return None
+    return stdout
+  @property
+  def _summary(self):
+    if self._summary_cache is None:
+      with open(self.root, 'r') as fh:
+        contents = fh.read()
+        self._summary_cache = json.loads(contents)
+    return self._summary_cache
