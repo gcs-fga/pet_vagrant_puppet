@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -13,16 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import debianbts
-
-class BugTrackerException(Exception):
-  pass
-
-class BinaryNotKnown(BugTrackerException):
-  """
-  This exception is thrown when we do not know the source package
-  for a given binary package.
-  """
-  pass
+from pet.exceptions import *
 
 class _BugReport(object):
   def update_bug(self, bug):

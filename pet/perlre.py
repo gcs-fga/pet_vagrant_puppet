@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Released under the same terms as the original software, see below.
@@ -27,6 +28,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from pet.exceptions import *
+
 import re
 
 _re_op = re.compile(r'^(s|tr|y)(.*)$')
@@ -54,9 +57,6 @@ _replacement_rules = [
   (re.compile(r'\$&'), r'\\g<0>'),
   (re.compile(r'\$\{?(\d)\}?'), r'\\g<\1>'),
 ]
-
-class RegexpError(Exception):
-  pass
 
 def compile(pattern):
   for regex, sub in _pattern_rules:

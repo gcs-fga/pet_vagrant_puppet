@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# vim:ts=2:sw=2:et:ai:sts=2
 #
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
@@ -14,11 +15,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
+import pet.models
+
+import copy
 import inotifyx
 import os
+import os.path
 import re
-from copy import copy
 import subprocess
 
 def setup_watch(path):
@@ -30,7 +33,7 @@ def setup_watch(path):
     os.close(fd)
 
 def run_single_action(command, options):
-  real_command = copy(command)
+  real_command = copy.copy(command)
   real_command.extend(options)
   print "I: Running {0}".format(real_command)
   retcode = subprocess.call(real_command)
@@ -46,22 +49,32 @@ def run_action(actions, filename):
       action_taken = True
   return action_taken
 
-session = Session()
-path = session.query(Config.value).filter_by(key='request_directory').scalar() or '/srv/pet.debian.net/requests'
-session.rollback()
-watch = setup_watch(path)
+def main():
+  session = pet.models.Session()
+  path = (session.query(pet.models.Config.value)
+      .filter_by(key='request_directory').scalar()
+      or '/srv/pet.debian.net/requests')
+  session.rollback()
+  watch = setup_watch(path)
 
-actions = [
-  dict(re=re.compile('\Aupdate-([A-Za-z0-9-]+)\Z'), command=['update-repository']),
-  dict(re=re.compile('\Aarchive-([A-Za-z0-9-]+)\Z'), command=['update-archive']),
-  dict(re=re.compile('\Abts-([A-Za-z0-9-]+)\Z'), command=['update-bts']),
-  dict(re=re.compile('\Awatch\Z'), command=['update-watch']),
-]
+  actions = [
+    dict(re=re.compile('\Aupdate-([A-Za-z0-9-]+)\Z'),
+      command=['update-repository']),
+    dict(re=re.compile('\Aarchive-([A-Za-z0-9-]+)\Z'),
+      command=['update-archive']),
+    dict(re=re.compile('\Abts-([A-Za-z0-9-]+)\Z'),
+      command=['update-bts']),
+    dict(re=re.compile('\Awatch\Z'),
+      command=['update-watch']),
+  ]
 
-while True:
-  inotifyx.get_events(watch)
-  for filename in os.listdir(path):
-    if run_action(actions, filename):
-      os.unlink(os.path.join(path, filename))
-    else:
-      print "E: Unknown request '{0}'".format(filename)
+  while True:
+    inotifyx.get_events(watch)
+    for filename in os.listdir(path):
+      if run_action(actions, filename):
+        os.unlink(os.path.join(path, filename))
+      else:
+        print "E: Unknown request '{0}'".format(filename)
+
+if __name__ == '__main__':
+  main()

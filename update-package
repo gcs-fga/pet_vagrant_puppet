@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# vim:ts=2:sw=2:et:ai:sts=2
 #
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
@@ -14,22 +15,27 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
-from pet.vcs import vcs_backend
+import pet.models
 import pet.update
+import pet.vcs
 
 import sys
 
-session = Session()
+def main(argv):
+  session = pet.models.Session()
+  updater = pet.update.PackageUpdater()
 
-pu = pet.update.PackageUpdater()
+  for package_name in argv[1:]:
+    packages = session.query(pet.models.Package).filter_by(name=package_name) \
+        .all()
+    for package in packages:
+      repo = package.repository
+      vcs = pet.vcs.vcs_backend(repo)
+      print "I: Updating package {0}".format(package.name)
+      updater.run(package, vcs)
 
-for package_name in sys.argv[1:]:
-  packages = session.query(Package).filter_by(name=package_name).all()
-  for p in packages:
-    r = p.repository
-    v = vcs_backend(r)
-    print "I: Updating package {0}".format(p.name)
-    pu.run(p, v)
+  session.commit()
 
-session.commit()
+if __name__ == '__main__':
+  main(sys.argv)
+

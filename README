@@ -1,12 +1,13 @@
 Needed packages
 ===============
 
-postgresql-9.0
-postgresql-9.0-debversion
+postgresql-9.1
+postgresql-9.1-debversion
 python-argparse
 python-debian
 python-debianbts
 python-inotifyx
+python-paste
 python-psycopg2
 python-pyramid
 python-sqlalchemy
@@ -24,7 +25,7 @@ Shall the new role be a superuser? (y/n) n
 Shall the new role be allowed to create databases? (y/n) y
 Shall the new role be allowed to create more new roles? (y/n) n
 $ createdb -O gregoa pet
-$ psql pet < /usr/share/postgresql/9.0/contrib/debversion.sql
+$ psql pet < /usr/share/postgresql/9.1/contrib/debversion.sql
 
 as the created user:
 

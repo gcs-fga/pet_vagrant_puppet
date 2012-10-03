@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# vim:ts=2:sw=2:et:ai:sts=2
 #
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
@@ -14,19 +15,24 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
-from pet.vcs import vcs_backend
+import pet.models
 import pet.update
 
 import sys
 
-session = Session()
+def main(argv):
+  session = pet.models.Session()
 
-for archive_name in sys.argv[1:]:
-  archives = session.query(Archive).filter_by(name=archive_name).all()
-  for a in archives:
-    print "I: Updating archive {0}".format(a.name)
-    au = pet.update.ArchiveUpdater(a)
-    au.run()
+  for archive_name in argv[1:]:
+    archives = session.query(pet.models.Archive).filter_by(name=archive_name) \
+        .all()
+    for archive in archives:
+      print "I: Updating archive {0}".format(archive.name)
+      updater = pet.update.ArchiveUpdater(archive)
+      updater.run()
 
-session.commit()
+  session.commit()
+
+if __name__ == '__main__':
+  main(sys.argv)
+

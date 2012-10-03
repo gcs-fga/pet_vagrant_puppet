@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011-2012, Ansgar Burchardt <ansgar@debian.org>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -12,20 +13,17 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from os.path import relpath
-import svn.core, svn.client, svn.ra
+from pet.exceptions import *
+
+import json
 import StringIO
+import subprocess
+import svn.client
+import svn.core
+import svn.ra
+import time
 import urllib2
 import urllib
-import json
-import subprocess
-import time
-
-class VCSException(Exception):
-  pass
-
-class FileNotFound(VCSException):
-  pass
 
 _vcs_backends = {}
 def _vcs_backend(name):

@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# vim:ts=2:sw=2:et:ai:sts=2
 #
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
@@ -14,31 +15,35 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from pet.models import *
-from pet.vcs import vcs_backend
+import pet.models
 import pet.update
-from argparse import ArgumentParser
 
+import argparse
 import sys
 
-parser = ArgumentParser(description='update a repository')
-parser.add_argument('-f', '--force', action='store_true', default=False)
-parser.add_argument('repositories', nargs='+')
-options = parser.parse_args(sys.argv[1:])
+def main(argv):
+  parser = argparse.ArgumentParser(description='update a repository')
+  parser.add_argument('-f', '--force', action='store_true', default=False)
+  parser.add_argument('repositories', nargs='+')
+  options = parser.parse_args(argv[1:])
 
-session = Session()
+  session = pet.models.Session()
 
-try:
-  for repo_id in options.repositories:
-    repos = session.query(Repository).filter_by(id=repo_id).all()
-    for r in repos:
-      print "I: Updating repository {0}".format(r.name)
-      ru = pet.update.RepositoryUpdater(r, force=options.force)
-      ru.run()
-  session.commit()
-except KeyboardInterrupt:
-  print "E: Interrupted."
-  session.commit()
-except:
-  session.rollback()
-  raise
+  try:
+    for repo_id in options.repositories:
+      repos = session.query(pet.models.Repository).filter_by(id=repo_id).all()
+      for repo in repos:
+        print "I: Updating repository {0}".format(repo.name)
+        updater = pet.update.RepositoryUpdater(repo, force=options.force)
+        updater.run()
+    session.commit()
+  except KeyboardInterrupt:
+    print "E: Interrupted."
+    session.commit()
+  except:
+    session.rollback()
+    raise
+
+if __name__ == '__main__':
+  main(sys.argv)
+

@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -14,9 +15,9 @@
 
 from pet.models import *
 
-from sqlalchemy.orm import aliased, joinedload
-from sqlalchemy import func
-from apt_pkg import version_compare
+import apt_pkg
+import sqlalchemy
+import sqlalchemy.orm
 
 class ClassifiedPackage(object):
   def __init__(self, named_tree, bugs, suite_packages, tags):
@@ -91,7 +92,8 @@ class ClassifiedPackage(object):
   @property
   def newer_upstream(self):
     if self.watch and self.watch.upstream_version:
-      return version_compare(self.watch.upstream_version, self.watch.debian_version) > 0
+      return apt_pkg.version_compare(self.watch.upstream_version,
+          self.watch.debian_version) > 0
     return False
 
   @property
@@ -99,7 +101,8 @@ class ClassifiedPackage(object):
     if self.watch:
       if self.watch.error is not None:
         return True
-      if version_compare(self.watch.upstream_version, self.watch.debian_version) < 0:
+      if apt_pkg.version_compare(self.watch.upstream_version,
+          self.watch.debian_version) < 0:
         return True
     return False
 
@@ -107,7 +110,8 @@ class Classifier(object):
   def __init__(self, session, named_trees, suite_condition, bug_tracker_condition):
     self.session = session
     sorted_named_trees = named_trees.join(NamedTree.package) \
-        .options(joinedload(NamedTree.watch_result, Package.repository)) \
+        .options(sqlalchemy.orm.joinedload(NamedTree.watch_result,
+          Package.repository)) \
         .order_by(Package.name, Package.repository_id, Package.id)
 
     bug_sources = session.query(BugSource) \
@@ -116,7 +120,7 @@ class Classifier(object):
         .filter(bug_tracker_condition) \
         .order_by(Bug.severity.desc(), Bug.bug_number) \
         .filter(Bug.done == False) \
-        .options(joinedload(BugSource.bug))
+        .options(sqlalchemy.orm.joinedload(BugSource.bug))
     bugs = {}
     for bs in bug_sources:
       bugs.setdefault(bs.source, []).append(bs.bug)
@@ -126,14 +130,14 @@ class Classifier(object):
         .filter(NamedTree.id.in_(named_trees.from_self(NamedTree.id).subquery())) \
         .filter(suite_condition) \
         .order_by(SuitePackage.version.desc()) \
-        .options(joinedload(SuitePackage.suite))
+        .options(sqlalchemy.orm.joinedload(SuitePackage.suite))
     suite_packages = {}
     for sp in suite_packages_query:
       suite_packages.setdefault(sp.source, []).append(sp)
 
-    Tags = aliased(NamedTree)
-    Reference = aliased(NamedTree)
-    max_version = session.query(func.max(Reference.version)) \
+    Tags = sqlalchemy.orm.aliased(NamedTree)
+    Reference = sqlalchemy.orm.aliased(NamedTree)
+    max_version = session.query(sqlalchemy.func.max(Reference.version)) \
         .filter(Reference.type == 'tag') \
         .filter(Reference.package_id == Tags.package_id) \
         .correlate(Tags) \

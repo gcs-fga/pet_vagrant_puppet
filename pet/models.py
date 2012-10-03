@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:et:ai:sts=2
 # Copyright 2011, Ansgar Burchardt <ansgar@debian.org>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -13,11 +14,10 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import pet
-from sqlalchemy import engine_from_config
 import sqlalchemy.dialects.postgresql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, exc, relation, sessionmaker
-from sqlalchemy.schema import MetaData
+import sqlalchemy.ext.declarative
+import sqlalchemy.orm
+import sqlalchemy.schema
 import sqlalchemy.types
 
 class DebVersion(sqlalchemy.types.UserDefinedType):
@@ -37,10 +37,10 @@ class DebVersion(sqlalchemy.types.UserDefinedType):
 sqlalchemy.dialects.postgresql.base.ischema_names['debversion'] = DebVersion
 
 engine = pet.engine()
-metadata = MetaData()
+metadata = sqlalchemy.schema.MetaData()
 metadata.reflect(bind=engine)
-Session = sessionmaker(bind=engine)
-Base = declarative_base(metadata=metadata)
+Session = sqlalchemy.orm.sessionmaker(bind=engine)
+Base = sqlalchemy.ext.declarative.declarative_base(metadata=metadata)
 
 class Config(Base):
   """configuration settings"""
@@ -61,7 +61,7 @@ class Repository(Base):
   repositories.
   """
   __tablename__ = 'repository'
-  team = relation('Team', backref='repositories')
+  team = sqlalchemy.orm.relation('Team', backref='repositories')
   @property
   def vcs(self):
     """returns the version control backend for the repository.
@@ -81,7 +81,7 @@ class Package(Base):
   name can differ from the Debian package name.
   """
   __tablename__ = 'package'
-  repository = relation('Repository', backref='packages')
+  repository = sqlalchemy.orm.relation('Repository', backref='packages')
   @property
   def trunk(self):
     return self.branches[None]
@@ -107,7 +107,8 @@ class NamedTree(Base):
   the branch with name None.
   """
   __tablename__ = 'named_tree'
-  package = relation('Package', lazy='joined', backref=backref('named_trees',  passive_deletes=True))
+  package = sqlalchemy.orm.relation('Package', lazy='joined',
+      backref=sqlalchemy.orm.backref('named_trees',  passive_deletes=True))
   def _file(self, filename):
     session = Session.object_session(self)
     return session.query(File).filter_by(named_tree=self, name=filename, commit_id=self.commit_id)
@@ -128,7 +129,8 @@ class WatchResult(Base):
   upstream version available.
   """
   __tablename__ = 'watch_result'
-  named_tree = relation('NamedTree', backref=backref('watch_result', uselist=False))
+  named_tree = sqlalchemy.orm.relation('NamedTree',
+      backref=sqlalchemy.orm.backref('watch_result', uselist=False))
 
 class Wait(Base):
   """model for WAITS-FOR entries
@@ -137,7 +139,7 @@ class Wait(Base):
   debian/changelog.  It gives the package/version we are waiting for.
   """
   __tablename__ = 'wait'
-  named_tree = relation('NamedTree', backref='waits')
+  named_tree = sqlalchemy.orm.relation('NamedTree', backref='waits')
 
 class File(Base):
   """file retrieved from a VCS
@@ -145,12 +147,14 @@ class File(Base):
   This class represents a file belonging to a `NamedTree`.
   """
   __tablename__ = 'file'
-  named_tree = relation('NamedTree', backref=backref('files', passive_deletes=True))
+  named_tree = sqlalchemy.orm.relation('NamedTree',
+      backref=sqlalchemy.orm.backref('files', passive_deletes=True))
 
 class Patch(Base):
   """patches present in debian/patches/series"""
   __tablename__ = 'patch'
-  named_tree = relation('NamedTree', backref=backref('patches', passive_deletes=True))
+  named_tree = sqlalchemy.orm.relation('NamedTree',
+      backref=sqlalchemy.orm.backref('patches', passive_deletes=True))
 
 class Archive(Base):
   """model for an archive"""
@@ -162,7 +166,7 @@ class Suite(Base):
   This class represents a suite in an `Archive`.
   """
   __tablename__ = 'suite'
-  archive = relation('Archive', backref='suites')
+  archive = sqlalchemy.orm.relation('Archive', backref='suites')
 
 class SuitePackage(Base):
   """model for a source package in a suite
@@ -170,7 +174,7 @@ class SuitePackage(Base):
   This class represents a source package in a `Suite`.
   """
   __tablename__ = 'suite_package'
-  suite = relation('Suite', backref='packages')
+  suite = sqlalchemy.orm.relation('Suite', backref='packages')
 
 class SuiteBinary(Base):
   """model for a binary package in a suite
@@ -178,7 +182,7 @@ class SuiteBinary(Base):
   This class represents a binary package in a `Suite`.
   """
   __tablename__ = 'suite_binary'
-  source = relation('SuitePackage', backref='binaries')
+  source = sqlalchemy.orm.relation('SuitePackage', backref='binaries')
   """returns the source package for this binary"""
 
 class BugTracker(Base):
@@ -196,7 +200,7 @@ class Bug(Base):
   `BugTracker`.
   """
   __tablename__ = 'bug'
-  bug_tracker = relation('BugTracker', backref='bugs')
+  bug_tracker = sqlalchemy.orm.relation('BugTracker', backref='bugs')
 
 class BugSource(Base):
   """associates bugs with source packages
@@ -205,4 +209,4 @@ class BugSource(Base):
   names.  It also provides information about affected versions.
   """
   __tablename__ = 'bug_source'
-  bug = relation('Bug', backref='bug_sources')
+  bug = sqlalchemy.orm.relation('Bug', backref='bug_sources')
