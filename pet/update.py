@@ -21,6 +21,7 @@ import pet.watch
 
 import debian
 import debian.changelog
+import debian.deb822
 import os.path
 import re
 import sqlalchemy.orm
