@@ -49,6 +49,8 @@ class WatchRule(object):
           options['passive'] = True
         elif kv == 'active':
           options['active'] = True
+        if len(kv) == 0:
+          pass
         else:
           key, value = kv.split("=", 1)
           match = _re_mangle.search(key)
