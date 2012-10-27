@@ -291,9 +291,8 @@ class SuiteUpdater(object):
       self.tmpdir = tempfile.mkdtemp(prefix="pet-suite-{0}".format(self.suite.name))
       self.cleantmp = True
   def __del__(self):
-    pass
-    #if self.cleantmp:
-    #  shutil.rmtree(self.tmpdir)
+    if self.cleantmp:
+      shutil.rmtree(self.tmpdir)
   def delete_package_list(self):
     self.session.query(SuitePackage).filter_by(suite=self.suite).delete()
   def _download(self, source, target):
