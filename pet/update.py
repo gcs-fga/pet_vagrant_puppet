@@ -24,6 +24,7 @@ import debian.changelog
 import debian.deb822
 import os.path
 import re
+import shutil
 import sqlalchemy.orm
 import sqlalchemy.orm.exc
 import subprocess
