@@ -49,12 +49,29 @@ def run_action(actions, filename):
       action_taken = True
   return action_taken
 
+def daemon(session):
+  log = session.query(pet.models.Config.value).filter_by(key='log_file').scalar() or '/dev/null'
+  log = os.path.expanduser(log)
+
+  with open("/dev/null", "r") as devnull:
+    os.dup2(devnull.fileno(), 0)
+  with open("log", "w+") as fh:
+    os.dup2(fh.fileno(), 1)
+    os.dup2(fh.fileno(), 2)
+
+  os.chdir("/")
+  pid = os.fork()
+  if pid != 0:
+    sys.exit()
+  pid = os.fork()
+  if pid != 0:
+    sys.exit()
+
 def main():
   session = pet.models.Session()
   path = (session.query(pet.models.Config.value)
       .filter_by(key='request_directory').scalar()
       or '/srv/pet.debian.net/requests')
-  session.rollback()
   watch = setup_watch(path)
 
   actions = [
@@ -68,6 +85,9 @@ def main():
       command=['update-watch']),
   ]
 
+  daemon(session)
+
+  session.close()
   while True:
     inotifyx.get_events(watch)
     for filename in os.listdir(path):
