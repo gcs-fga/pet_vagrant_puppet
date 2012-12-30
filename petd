@@ -23,6 +23,7 @@ import os
 import os.path
 import re
 import subprocess
+import sys
 
 def setup_watch(path):
   fd = inotifyx.init()
@@ -55,7 +56,7 @@ def daemon(session):
 
   with open("/dev/null", "r") as devnull:
     os.dup2(devnull.fileno(), 0)
-  with open("log", "w+") as fh:
+  with open(log, "w+") as fh:
     os.dup2(fh.fileno(), 1)
     os.dup2(fh.fileno(), 2)
 
