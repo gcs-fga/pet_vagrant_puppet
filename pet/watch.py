@@ -94,7 +94,10 @@ class WatchRule(object):
     pattern = r'\A{0}\Z'.format(pattern)
     self.options = options
     self.homepage = homepage
-    self.pattern = pet.perlre.compile(pattern)
+    try:
+      self.pattern = pet.perlre.compile(pattern)
+    except Exception as e:
+      raise InvalidWatchFile("Could not parse regular expression '{0}': {1}.".format(pattern, e))
     self.version = version
     self.action = action
   def _mangle(self, regexpes, string):
