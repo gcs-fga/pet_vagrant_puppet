@@ -139,7 +139,7 @@ class Wait(Base):
   debian/changelog.  It gives the package/version we are waiting for.
   """
   __tablename__ = 'wait'
-  named_tree = sqlalchemy.orm.relation('NamedTree', backref='waits', passive_deletes=True)
+  named_tree = sqlalchemy.orm.relation('NamedTree', backref=sqlalchemy.orm.backref('waits', passive_deletes=True))
 
 class File(Base):
   """file retrieved from a VCS
