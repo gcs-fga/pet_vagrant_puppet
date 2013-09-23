@@ -224,7 +224,7 @@ class Watcher(object):
       if e.code == 404:
         raise NotFound("HomepageNotFound")
       raise DownloadError("DownloadError")
-    except (urllib2.URLError, httplib.HTTPException):
+    except (urllib2.URLError, httplib.HTTPException, IOError):
       raise DownloadError("DownloadError")
     except RegexpError:
       raise InvalidWatchFile("RegexpError")
