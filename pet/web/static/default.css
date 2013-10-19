@@ -58,13 +58,15 @@ color: black;
     overflow: auto;
     margin: 0em 0 0 -10em;
     padding: 0.5em;
-    border: 2px outset #F5F5B5;     /* light yellowish */
+    border: 2px solid #F5F5B5;     /* light yellowish */
+    border-radius: 6px;
     background: #F5F5B5;            /* light yellowish */
     color: black;
     /* Nonstandard, but very nice. */
     opacity: 0.95;
     -moz-opacity: 0.95;
     filter: alpha(opacity=95);
+    box-shadow: 3px 3px 6px #555;
 }
 
 span.patches:hover span.balloon {
