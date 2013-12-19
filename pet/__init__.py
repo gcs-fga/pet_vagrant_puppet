@@ -16,4 +16,4 @@
 import sqlalchemy
 
 def engine():
-  return sqlalchemy.create_engine('postgresql:///pet')
+  return sqlalchemy.create_engine('postgresql://service=pet')
