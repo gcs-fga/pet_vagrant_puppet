@@ -353,3 +353,28 @@ class GitLocal(Git):
         contents = fh.read()
         self._summary_cache = json.loads(contents)
     return self._summary_cache
+
+@_vcs_backend("git-ssh")
+class GitSsh(Git):
+  def __init__(self, repository):
+    super(GitLocal, self).__init__(repository)
+  def file(self, package, filename, branch=None, tag=None):
+    assert not (branch and tag), "cannot give both branch and tag"
+    tree = branch or tag or 'HEAD'
+    cwd = '{0}/{1}.git'.format(self.root, package)
+    cmd = ['ssh', 'pet-cat-file', 'cd', cwd, ';', 'git', 'cat-file', 'blob', '{0}:{1}'.format(tree, filename)]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    if p.returncode != 0:
+      return None
+    return stdout
+  @property
+  def _summary(self):
+    if self._summary_cache is None:
+      cmd = ['ssh', 'pet-cat-file', 'cd', self.root, ';', 'pet-summary']
+      p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      (stdout, stderr) = p.communicate()
+      if p.returncode != 0:
+        raise Exception("Getting summary for {0} failed: {1}".format(self.root, stderr))
+      self._summary_cache = json.loads(stdout)
+    return self._summary_cache
