@@ -1,0 +1,108 @@
+#! /usr/bin/env python
+# vim:ts=2:sw=2:et:ai:sts=2
+#
+# Copyright 2013, Ansgar Burchardt <ansgar@debian.org>
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+"""
+wrapper around git-cat-file to be used as a forced ssh command
+"""
+
+from __future__ import print_function
+
+import os
+import re
+import subprocess
+import sys
+
+class Request(object):
+    """parse and execute requests
+
+    A command has to be of the form
+
+        cd <path> ; git cat-file <filespec>
+    """
+    def __init__(self, command):
+        self.parse_command(command)
+
+    def parse_command(self, command):
+        c = command.split()
+
+        if c[0] != "cd" or c[2] != ";":
+            raise Exception("Command does not start with 'cd'.")
+        self.directory = c[1]
+
+        self.validate_path(self.directory)
+
+        if c[3] == "git":
+            self.parse_command_git(c)
+        elif c[3] == "pet-summary":
+            self.parse_command_summary(c)
+        else:
+            raise Exception("Unknown command: {0}".format(c[3]))
+
+    def parse_command_git(self, c):
+        if c[4] != "cat-file" or c[5] != "blob":
+            raise Exception("Command does not invoke 'git cat-file'.")
+
+        self.command = self.execute_git
+        self.filespec = c[6]
+
+        self.validate_filespec(self.filespec)
+
+    def parse_command_summary(self, c):
+        self.command = self.execute_summary
+
+    def validate_path(self, path):
+        re_path = re.compile(r'\A/git/')
+        re_path_not = re.compile(r'/\.')
+        if not re_path.search(self.directory) or re_path_not.search(self.directory):
+            raise Exception("Invalid directory: {0}".format(self.directory))
+
+    def validate_filespec(self, filespec):
+        re_filespec = re.compile(r'\A[a-zA-Z0-9]')
+
+        if not re_filespec.search(self.filespec):
+            raise Exception("Invalid filespec: {0}".format(self.filespec))
+
+    def execute(self):
+        self.command()
+
+    def execute_git(self):
+        cmd = ('git', 'cat-file', 'blob', self.filespec)
+        return subprocess.call(cmd, cwd=self.directory)
+
+    def execute_summary(self):
+        fn = re.sub('/', '_', self.directory)
+        path = os.path.join('/home/groups/pet-devel/summary', fn)
+        with open(path, 'r') as fh:
+            data = True
+            while data:
+                data = fh.read(4096)
+                sys.stdout.write(data)
+        return 0
+
+if __name__ == '__main__':
+    command = os.environ.get('SSH_ORIGINAL_COMMAND')
+    if command is None:
+        print('SSH_ORIGINAL_COMMAND is not set.')
+        sys.exit(1)
+
+    try:
+        r = Request(command)
+        ret = r.execute()
+        sys.exit(ret)
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
