@@ -357,7 +357,7 @@ class GitLocal(Git):
 @_vcs_backend("git-ssh")
 class GitSsh(Git):
   def __init__(self, repository):
-    super(GitLocal, self).__init__(repository)
+    super(GitSsh, self).__init__(repository)
   def file(self, package, filename, branch=None, tag=None):
     assert not (branch and tag), "cannot give both branch and tag"
     tree = branch or tag or 'HEAD'
