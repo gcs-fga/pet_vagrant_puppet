@@ -31,6 +31,7 @@ def main(global_config=None, **settings):
   #})
 
   config = Configurator(settings=settings)
+  config.include('pyramid_chameleon')
   config.add_static_view('static', 'pet.web:static')
 
   config.add_route('overview', '/{team_name}/pet.cgi')
