@@ -154,7 +154,7 @@ class WatchFile(object):
         # collect watch rules
         self.rules.append(WatchRule(line))
 
-_re_cpan_url = re.compile('^http://search.cpan.org/')
+_re_cpan_url = re.compile('^https?://search.cpan.org/|https?://www.cpan.org/|https?://metacpan.org/|https?://cpan.metacpan.org/')
 _re_http = re.compile('^https?://')
 _re_href = re.compile("""href=(?:"([^"]+)"|'([^']+)'|([^'">]+))""")
 _re_sf = re.compile(r'^http://sf\.net/')
@@ -235,7 +235,7 @@ class Watcher(object):
       return results[0]
     return None
 
-_re_cpan_dist = re.compile(r'/dist/')
+_re_cpan_dist = re.compile(r'/dist/|/release/')
 _re_cpan_files = re.compile(r'/authors/id/|/modules/by-module/')
 
 class CPAN(object):
