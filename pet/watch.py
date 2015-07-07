@@ -20,6 +20,7 @@ import debian.debian_support
 import gzip
 import httplib
 import re
+import ssl
 import StringIO
 import urllib2
 import urlparse
@@ -35,6 +36,11 @@ _re_mangle  = re.compile(r'mangle$')
 _re_paren   = re.compile(r'(.+)/([^/]*\([^/]+\)[^/]*)$')
 
 def TIMEOUT(): return 180
+
+def urlopen(*args, **kwargs):
+  if 'context' not in kwargs:
+    kwargs['context'] = ssl._create_unverified_context()
+  urllib2.urlopen(*args, **kwargs)
 
 class WatchRule(object):
   def __init__(self, rule=None):
@@ -199,7 +205,7 @@ class Watcher(object):
       if results is None:
         results = []
         homepage = _re_sf.sub('http://qa.debian.org/watch/sf.php/', rule.homepage)
-        fh = urllib2.urlopen(homepage,timeout=TIMEOUT())
+        fh = urlopen(homepage, timeout=TIMEOUT())
         contents = fh.read()
         fh.close()
         if _re_http.match(homepage):
@@ -245,7 +251,7 @@ class CPAN(object):
     self._files = None
 
   def _get_and_uncompress(self, url):
-    response = urllib2.urlopen(url,timeout=TIMEOUT())
+    response = urlopen(url, timeout=TIMEOUT())
     buf = StringIO.StringIO(response.read())
     response.close()
     return gzip.GzipFile(fileobj=buf, mode='rb')
