@@ -40,7 +40,7 @@ def TIMEOUT(): return 180
 def urlopen(*args, **kwargs):
   if 'context' not in kwargs:
     kwargs['context'] = ssl._create_unverified_context()
-  urllib2.urlopen(*args, **kwargs)
+  return urllib2.urlopen(*args, **kwargs)
 
 class WatchRule(object):
   def __init__(self, rule=None):
