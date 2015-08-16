@@ -17,6 +17,10 @@ python-subversion
 Install
 =======
 
+as root (waiting for python-pyramid-chameleon package, https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=785048):
+
+# pip install pyramid_chameleon
+
 as root (more precise: as a postgres superuser):
 
 # su postgres
