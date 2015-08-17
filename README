@@ -24,11 +24,11 @@ as root (waiting for python-pyramid-chameleon package, https://bugs.debian.org/c
 as root (more precise: as a postgres superuser):
 
 # su postgres
-$ createuser gregoa
+$ createuser pet
 Shall the new role be a superuser? (y/n) n
 Shall the new role be allowed to create databases? (y/n) y
 Shall the new role be allowed to create more new roles? (y/n) n
-$ createdb -O gregoa pet
+$ createdb -O pet pet
 $ psql pet < /usr/share/postgresql/9.1/contrib/debversion.sql
 
 as the created user:
