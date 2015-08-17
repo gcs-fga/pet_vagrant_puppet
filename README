@@ -12,6 +12,7 @@ python-psycopg2
 python-pyramid
 python-sqlalchemy
 python-subversion
+wget
 
 
 Install
