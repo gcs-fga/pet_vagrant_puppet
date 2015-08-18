@@ -10,6 +10,9 @@
 * small bug in "Missing tags" logic; cf. 
   http://pet.debian.net/pkg-perl/pet.cgi and
   libdancer2-perl
+* another glitch with "Missing" tags and native packages;
+  http://pet.debian.net/pkg-perl/pet.cgi and
+  pkg-components
 * check PET(1) to see which features are missing in PET3
   https://tincho.org/pet/pet.cgi is a running PET(1) instance
   (showing patches is one, there might be more)
