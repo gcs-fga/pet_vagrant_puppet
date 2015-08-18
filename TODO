@@ -21,3 +21,5 @@
   + find out what terminates apache2 and fix it
 * get sim6 access to petrova
   https://dsa.debian.org/doc/guest-account/
+* on petrov (with the systemd unit?):
+  rotate log/*
