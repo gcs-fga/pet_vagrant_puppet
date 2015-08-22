@@ -1,0 +1,79 @@
+psql seri[Kvie[Kce=pet
+psql (9.4.3)
+SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: off)
+Type "help" for help.
+
+pet=> \d+
+[?1049h[?1h=                                            List of relations
+ Schema |         Name         |   Type   | Owner |    Size    |               Description                 
+--------+----------------------+----------+-------+------------+---------------------------------------- --
+ public | archive              | table    | pet   | 16 kB      | 
+ public | archive_id_seq       | sequence | pet   | 8192 bytes | 
+ public | bug                  | table    | pet   | 2712 kB    | 
+ public | bug_id_seq           | sequence | pet   | 8192 bytes | 
+ public | bug_source           | table    | pet   | 2416 kB    | 
+ public | bug_tracker          | table    | pet   | 16 kB      | 
+ public | bug_tracker_id_seq   | sequence | pet   | 8192 bytes | 
+ public | config               | table    | pet   | 16 kB      | 
+ public | file                 | table    | pet   | 284 MB     | 
+ public | file_id_seq          | sequence | pet   | 8192 bytes | 
+ public | named_tree           | table    | pet   | 38 MB      | branches, tags and trunk are named_tree s
+ public | named_tree_id_seq    | sequence | pet   | 8192 bytes | 
+ public | package              | table    | pet   | 416 kB     | 
+ public | package_id_seq       | sequence | pet   | 8192 bytes | 
+ public | patch                | table    | pet   | 4024 kB    | 
+ public | repository           | table    | pet   | 16 kB      | 
+ public | repository_id_seq    | sequence | pet   | 8192 bytes | 
+ public | suite                | table    | pet   | 16 kB      | 
+ public | suite_binary         | table    | pet   | 8192 bytes | 
+ public | suite_id_seq         | sequence | pet   | 8192 bytes | 
+ public | suite_package        | table    | pet   | 17 MB      | 
+ public | suite_package_id_seq | sequence | pet   | 8192 bytes | 
+ public | team                 | table    | pet   | 16 kB      | 
+ public | team_id_seq          | sequence | pet   | 8192 bytes | 
+ public | wait                 | table    | pet   | 40 kB      | 
+ public | wait_id_seq          | sequence | pet   | 8192 bytes | 
+ public | watch_result         | table    | pet   | 1696 kB    | 
+(27 rows)
+
+[3m(END)[23m[K[K[?1l>[?1049lpet=> select * from team;
+[?1049h[?1h= id |      name       |                                         maintainer                                           |                    url                    
+----+-----------------+--------------------------------------------------------------------------------- ------------+-------------------------------------------
+  1 | pkg-perl        | Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>                             | http://pkg-perl.alioth.debian.org/
+  2 | pkg-ocaml-maint | Debian OCaml Maintainers <debian-ocaml-maint@lists.debian.org>                               | http://pkg-ocaml-maint.alioth.debian.org/
+  3 | pkg-games       | Debian Games Team <pkg-games-devel@lists.alioth.debian.org>                                  | http://pkg-games.alioth.debian.org/
+  4 | pkg-ruby-extras | Debian Ruby Extras Maintainers <pkg-ruby-extras-maintainers@lists.alioth.debian. org>        | http://wiki.debian.org/Teams/Ruby
+  5 | pkg-multimedia  | Debian multimedia packages maintainers <pkg-multimedia-maintainers@lists.alioth. debian.org> | http://wiki.debian.org/DebianMultimedia
+  6 | pkg-osm         | Debian OpenStreetMap Team <pkg-osm-maint@lists.alioth.debian.org>                            | http://pkg-osm.alioth.debian.org/
+  8 | debian-xml-sgml | Debian XML/SGML Group <debian-xml-sgml-pkgs@lists.alioth.debian.org>                         | http://debian-xml-sgml.alioth.debian.org/
+  7 | debichem        | The Debichem Group <debichem-devel@lists.alioth.debian.org>                                  | http://debichem.alioth.debian.org/
+  9 | collab-maint    | -                                                                                            | 
+ 10 | pkg-hamradio    | Debian Hamradio Maintainers <debian-hams@lists.debian.org>                                   | 
+ 11 | debian-med      | Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>                     | 
+(11 rows)
+
+[3m(END)[23m[K[K[?1l>[?1049lpet=> insert into team (name.,[K[K, maintainer, url) values ('pkg-go', 'pkg-go <pkg-go-maintainers@lists.aliot h.debian.org>', 'https://pkg-go.alioth.debian.org/') returning id;
+ id 
+----
+ 12
+(1 row)
+
+INSERT 0 1
+pet=> insert into repository (name, type, root, web_root, team_id) values ('git', 'git-ssh', '/git/pkg-g o/packages', http://anonscm.debian.org/gitweb/?p='http://anonscm.debian.org/gitweb/?p=[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Cpkg-go', 12) returning id;
+ id 
+----
+ 14
+(1 row)
+
+INSERT 0 1
+pet=> [Kpet=> \q
+pet-devel@petrova:~$ cat >/dev/null
+On alioth.d.o:
+
+Setup /home/groups/pet/PET3/pkg-go/pet-git-helper
+
+mkdir /home/groups/pet/htdocs/pet2-data/pkg-go and set permissions (fa  setfacl)
+
+Setup _git_pkg-go_packages symlink in /home/groups/pet-devel/summary
+
+Run "/home/groups/pet/PET3/pkg-go/pet-git-helper update-all" and everythingsh     should show up
