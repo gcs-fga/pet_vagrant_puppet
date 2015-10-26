@@ -126,4 +126,12 @@ class DebianBugTracker(object):
     else:
       bug_numbers = set(bug_numbers)
     bug_numbers.update(debianbts.get_bugs('src', sources))
-    return [ _DebianBugReport(b, self.binary_source_map, self.ignore_unknown_binaries) for b in debianbts.get_status(list(bug_numbers)) ]
+
+    # process in batches. stolen from python-debianbts.
+    BATCH_SIZE = 500
+    result = []
+    for i in range(0, len(bug_numbers), BATCH_SIZE):
+        slice = list(bug_numbers)[i:i + BATCH_SIZE]
+        result += debianbts.get_status(slice)
+
+    return [ _DebianBugReport(b, self.binary_source_map, self.ignore_unknown_binaries) for b in result ]
