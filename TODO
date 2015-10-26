@@ -1,9 +1,6 @@
 * check bugs:
   https://bugs.debian.org/pet.debian.net
 * package pyramid_chameleon
-* handle BTS changes:
-  + either backport python-debianbts (cf. #722226)
-  + or update PET's bts queries to do it in chunks
 * write documentation (and maybe tools) on how to add new teams
   (what to do in the database on petrova and in the filesystem on
   petrova and moszumanska)
