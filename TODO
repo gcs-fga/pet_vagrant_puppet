@@ -21,3 +21,6 @@
 * on petrova (with the systemd unit?):
   rotate log/*
 * s/gitweb/cit/ (and adjust paths) in webapp
+* highlight packages with newer versions in the archive than
+  in git (i.e. missing pushes). new section or at least some
+  colours?
