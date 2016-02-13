@@ -135,5 +135,8 @@ def apply_perlre(regexp, string):
     replacement = regex.sub(sub, replacement)
 
   # TODO: flags is only in Python 2.7
-  return re.sub(pattern, replacement, string, count=count)
+  try:
+    return re.sub(pattern, replacement, string, count=count)
+  except:
+    return string
   #return re.sub(pattern, replacement, string, count=count, flags=py_flags)
