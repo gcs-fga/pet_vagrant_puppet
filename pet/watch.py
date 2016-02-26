@@ -218,7 +218,10 @@ class Watcher(object):
           match = rule.pattern.search(link)
           if match:
             url = urlparse.urljoin(homepage, link)
-            v = rule.uversionmangle(".".join(match.groups()))
+            try:
+              v = rule.uversionmangle(".".join(match.groups()))
+            except TypeError:
+              raise InvalidVersion("InvalidVersion")
             try:
               version = debian.debian_support.Version(v)
             except ValueError:
