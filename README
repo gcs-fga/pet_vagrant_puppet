@@ -49,3 +49,5 @@ $ ./update-archive debian
 To start the web interface:
 $ ./pet-serve
 http://localhost:8080/pkg-perl/pet.cgi
+or with vagrant
+http://localhost:4567/pkg-perl/pet.cgi
