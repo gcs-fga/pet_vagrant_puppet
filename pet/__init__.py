@@ -15,8 +15,8 @@
 
 import sqlalchemy
 
-
-def engine():
-    return sqlalchemy.create_engine(
-        'postgresql://pet@bmdb1.debian.org:5435/pet'
-    )
+def engine(no_cert):
+    if(no_cert):
+        return sqlalchemy.create_engine('postgresql://pet@bmdb1.debian.org:5435/pet')
+    else:
+        return sqlalchemy.create_engine('postgresql://pet@bmdb1.debian.org:5435/pet?sslmode=verify-full&sslrootcert=/etc/ssl/debian/certs/ca.crt')
