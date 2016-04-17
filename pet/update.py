@@ -297,17 +297,17 @@ class SuiteUpdater(object):
   def delete_package_list(self):
     self.session.query(SuitePackage).filter_by(suite=self.suite).delete()
   def _download(self, source, target):
-    target_gz = target + ".gz"
-    r = subprocess.call(['wget', '--quiet', '-O', target_gz, '--', source])
+    target_xz = target + ".xz"
+    r = subprocess.call(['wget', '--quiet', '-O', target_xz, '--', source])
     if r:
       raise IOError("wget failed for {0}.".format(source))
     with open(target, 'w') as fh:
-      r = subprocess.call(['gzip', '--decompress', '--to-stdout', '--', target_gz], stdout=fh)
+      r = subprocess.call(['xz', '--decompress', '--stdout', '--', target_xz], stdout=fh)
       if r:
-        raise IOError("gzip failed for {0}.".format(source))
+        raise IOError("xz failed for {0}.".format(source))
   def add_package_list(self):
     for component in self.suite.components:
-      url = "{0}/dists/{1}/{2}/source/Sources.gz".format(self.archive.url, self.suite.name, component)
+      url = "{0}/dists/{1}/{2}/source/Sources.xz".format(self.archive.url, self.suite.name, component)
       target = os.path.join(self.tmpdir, "sources-{0}-{1}-{2}".format(self.archive.id, self.suite.id, component))
       self._download(url, target)
       with open(target, 'r') as fh:
