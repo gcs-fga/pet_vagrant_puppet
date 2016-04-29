@@ -57,6 +57,12 @@ class WatchRule(object):
           options['passive'] = True
         elif kv == 'active':
           options['active'] = True
+        elif kv == 'repack':
+          options['repack'] = True
+        elif kv == 'decompress':
+          options['decompress'] = True
+        elif kv == 'bare':
+          options['bare'] = True
         elif len(kv) == 0:
           pass
         else:
