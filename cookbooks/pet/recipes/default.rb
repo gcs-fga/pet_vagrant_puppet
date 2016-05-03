@@ -77,7 +77,7 @@ end
 
 #updating schema and inserting data
 execute "update schema and creating tables" do
-  command "/vagrant/pet-update -c"
+  command "/vagrant/pet-update -c -nc"
   user "pet"
   action :run
   not_if "psql pet -tAc \"SELECT 1 FROM team\" | grep -q 1"
