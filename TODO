@@ -24,3 +24,4 @@
 * highlight packages with newer versions in the archive than
   in git (i.e. missing pushes). new section or at least some
   colours?
+* support debian/watch version 4
