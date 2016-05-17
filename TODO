@@ -13,6 +13,8 @@
 * check PET(1) to see which features are missing in PET3
   https://tincho.org/pet/pet.cgi is a running PET(1) instance
   (showing patches is one, there might be more)
+* there are also feature requests at
+  https://wiki.debian.org/Teams/DebianPerlGroup/OpenTasks
 * petrova:
   + write systemd unit for petd
   + find out what terminates apache2 and fix it
