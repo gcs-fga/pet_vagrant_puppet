@@ -1,0 +1,8 @@
+Package: pet
+Version: 0.1-1
+Architecture: i386
+Maintainer: GCS <gcs@WordPress-on-1404.122115-172>
+Installed-Size: 32
+Priority: optional
+Description: PET - Package Entropy Tracker
+ PET is a collection of scripts that gather information about your (or your group's) packages. It allows you to see in a bird's eye view the health of hundreds of packages, instantly realizing where work is needed.
