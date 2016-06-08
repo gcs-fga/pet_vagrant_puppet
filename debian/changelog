@@ -2,4 +2,4 @@ pet (0.1-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- Tiago <tiago@debian.Tiago>  Tue, 31 May 2016 21:44:08 -0300
+ -- Tiago Assuncao <tiago@sof2u.com>  Tue, 31 May 2016 21:44:08 -0300

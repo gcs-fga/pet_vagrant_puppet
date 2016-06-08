@@ -1,13 +1,13 @@
 Source: pet
-Priority: optional
-Maintainer: GCS <gcs@WordPress-on-1404.122115-172>
-Build-Depends: debhelper (>= 8.0.0)
+Section: base
+Maintainer: Tiago Assuncao <tiago@sof2u.com>
+Build-Depends: debhelper (>= 8.0.0), postgresql-9.4
 Standards-Version: 3.9.4
-#Vcs-Git: git://git.debian.org/collab-maint/pet.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/pet.git;a=summary
+Priority: optional
 
 Package: pet
+# Version: 0.1
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: ${shlibs:Depends}, ${python:Depends}, ${misc:Depends}, python, postgresql-9.4-debversion, postgresql-9.4, wget, python-paste, postgresql-9.4-debversion, python-argparse, python-debian, python-debianbts, python-inotifyx, python-paste, python-psycopg2, python-pyramid, python-sqlalchemy, python-subversion
 Description: PET - Package Entropy Tracker
 	PET is a collection of scripts that gather information about your (or your group's) packages. It allows you to see in a bird's eye view the health of hundreds of packages, instantly realizing where work is needed.
