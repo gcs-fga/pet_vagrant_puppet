@@ -12,8 +12,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "debian/jessie64"
 
+  config.vm.provider "virtualbox" do |vm, override|
+    #override.vm.network 'private_network', ip: "10.0.0.110"
+    override.vm.network 'forwarded_port', guest: "8080" , host: "4567"
+  end
+
   # puppet-bootstrap
-  # config.vm.provision "shell", path: "scripts/debian.sh"
+  config.vm.provision "shell", path: "scripts/debian.sh"
 
   config.vm.provision "puppet" do |puppet|
     puppet.manifest_file = "site.pp"
