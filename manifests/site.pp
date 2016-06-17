@@ -86,4 +86,9 @@ class user{
     user => "pet",
     unless => "/usr/bin/psql pet -tAc \"SELECT * FROM team WHERE name='pkg-perl'\" | /bin/grep -q 'pkg-perl'",
   }
+  exec{ "database insert repository table":
+    command => "/usr/bin/psql pet --command \"INSERT INTO repository (name, type, root, web_root, team_id) VALUES ('git','git','https://pet.alioth.debian.org/pet2-data/pkg-perl/git-pkg-perl-packages.json','http://anonscm.debian.org/gitweb/?p=pkg-perl/packages', 1);\"",
+    user => "pet",
+    unless => "/usr/bin/psql pet -tAc \"SELECT * FROM repository WHERE name='git'\" | /bin/grep -q 'git'",
+  }
 }
