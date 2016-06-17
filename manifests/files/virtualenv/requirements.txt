@@ -1,0 +1,6 @@
+Django
+Fabric
+MySQL-python
+Pillow
+django-compressor
+django-debug-toolbar
