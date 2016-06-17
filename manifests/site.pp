@@ -81,4 +81,9 @@ class user{
     unless => "/usr/bin/psql pet -tAc \"SELECT 1 FROM team\" | /bin/grep -q 1",
     path => "/",
   }
+  exec{ "insert a team on bd":
+    command => "/usr/bin/psql pet --command \"INSERT INTO team (name, maintainer, url) VALUES ('pkg-perl', 'Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>', 'http://pkg-perl.alioth.debian.org/');\"",
+    user => "pet",
+    unless => "/usr/bin/psql pet -tAc \"SELECT * FROM team WHERE name='pkg-perl'\" | /bin/grep -q 'pkg-perl'",
+  }
 }
