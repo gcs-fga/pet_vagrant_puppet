@@ -96,4 +96,15 @@ class user{
     user => "pet",
     unless => "/usr/bin/psql pet -tAc \"SELECT * FROM package WHERE name='clive'\" | /bin/grep -q 'clive'"
   }
+
+  exec{ "database insert archive table":
+    command => "/usr/bin/psql pet --command \"INSERT INTO archive (name, url, web_root) VALUES ('debian', 'http://cdn.debian.net/debian', 'http://packages.qa.debian.org/');\"",
+    user => "pet",
+    unless => "/usr/bin/psql pet -tAc \"SELECT * FROM archive WHERE name='debian'\" | /bin/grep -q 'debian'",
+  }
+  exec{ "database insert suite table":
+    command => "/usr/bin/psql pet --command \"INSERT INTO suite (archive_id, name) VALUES (1, 'unstable');\"",
+    user => "pet",
+    unless => "/usr/bin/psql pet -tAc \"SELECT * FROM suite WHERE name='unstable'\" | /bin/grep -q 'unstable'",
+  }
 }
