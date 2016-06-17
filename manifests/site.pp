@@ -30,6 +30,12 @@ class user{
     home       => '/home/pet',
   }
 
+  file { 'hosts file':
+    path => "/etc/hosts",
+    ensure => file,
+    content => template("/tmp/vagrant-puppet-3/manifests/files/hosts"),
+  }
+
   exec { 'psql create user':
     user => "postgres",
     command => "/usr/bin/createuser pet",
