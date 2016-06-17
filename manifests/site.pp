@@ -91,4 +91,9 @@ class user{
     user => "pet",
     unless => "/usr/bin/psql pet -tAc \"SELECT * FROM repository WHERE name='git'\" | /bin/grep -q 'git'",
   }
+  exec{ "database insert package table":
+    command => "/usr/bin/psql pet --command \"INSERT INTO package (name, repository_id) VALUES ('clive', 1);\"",
+    user => "pet",
+    unless => "/usr/bin/psql pet -tAc \"SELECT * FROM package WHERE name='clive'\" | /bin/grep -q 'clive'"
+  }
 }
