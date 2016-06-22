@@ -34,13 +34,13 @@ class user{
   file { 'postgresql conf':
     path => '/etc/postgresql/9.4/main/postgresql.conf',
     ensure => file,
-    content => template("/tmp/vagrant-puppet-3/manifests/files/postgresql.conf"),
+    content => template("/tmp/vagrant-puppet-4/manifests/files/postgresql.conf"),
   }
 
   file { 'pg_hba conf':
     path => '/etc/postgresql/9.4/main/pg_hba.conf',
     ensure => file,
-    content => template("/tmp/vagrant-puppet-3/manifests/files/pg_hba.conf"),
+    content => template("/tmp/vagrant-puppet-4/manifests/files/pg_hba.conf"),
   }
 
   exec { 'psql create user':
@@ -66,7 +66,7 @@ class user{
   file { 'hosts file':
     path => "/etc/hosts",
     ensure => file,
-    content => template("/tmp/vagrant-puppet-3/manifests/files/hosts"),
+    content => template("/tmp/vagrant-puppet-4/manifests/files/hosts"),
   }
 
   service {"postgresql":
@@ -81,6 +81,7 @@ class user{
     unless => "/usr/bin/psql pet -tAc \"SELECT 1 FROM team\" | /bin/grep -q 1",
     path => "/",
   }
+
   exec{ "insert a team on bd":
     command => "/usr/bin/psql pet --command \"INSERT INTO team (name, maintainer, url) VALUES ('pkg-perl', 'Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>', 'http://pkg-perl.alioth.debian.org/');\"",
     user => "pet",
