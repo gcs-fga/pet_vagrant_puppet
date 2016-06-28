@@ -34,13 +34,13 @@ class user{
   file { 'postgresql conf':
     path => '/etc/postgresql/9.4/main/postgresql.conf',
     ensure => file,
-    content => template("/tmp/vagrant-puppet-4/manifests/files/postgresql.conf"),
+    content => template("/tmp/vagrant-puppet/manifests-a11d1078b1b1f2e3bdea27312f6ba513/files/postgresql.conf"),
   }
 
   file { 'pg_hba conf':
     path => '/etc/postgresql/9.4/main/pg_hba.conf',
     ensure => file,
-    content => template("/tmp/vagrant-puppet-4/manifests/files/pg_hba.conf"),
+    content => template("/tmp/vagrant-puppet/manifests-a11d1078b1b1f2e3bdea27312f6ba513/files/pg_hba.conf"),
   }
 
   exec { 'psql create user':
@@ -66,7 +66,7 @@ class user{
   file { 'hosts file':
     path => "/etc/hosts",
     ensure => file,
-    content => template("/tmp/vagrant-puppet-4/manifests/files/hosts"),
+    content => template("/tmp/vagrant-puppet/manifests-a11d1078b1b1f2e3bdea27312f6ba513/files/hosts"),
   }
 
   service {"postgresql":
